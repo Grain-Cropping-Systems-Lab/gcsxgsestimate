@@ -1,0 +1,15 @@
+.green .noUi-connect {
+  background: #00A65A;
+}
+
+.red .noUi-connect {
+  background: #DD4B39;
+}
+
+.orange .noUi-connect {
+  background: #FF851B;
+}
+
+.yellow .noUi-connect {
+  background: #F39C12;
+}

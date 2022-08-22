@@ -15,8 +15,22 @@ BugReports:
     https://github.com/Grain-Cropping-Systems-Lab/gcsxgsestimate/issues
 Imports: 
     config (>= 0.3.1),
+    DBI,
+    dbplyr,
+    dplyr,
     golem (>= 0.3.3),
-    shiny (>= 1.7.2)
+    googleway,
+    httr,
+    lubridate,
+    plotly,
+    readr,
+    RPostgres,
+    sf,
+    shiny (>= 1.7.2),
+    shinycssloaders,
+    shinyjs,
+    tidyr,
+    waiter
 Config/testthat/edition: 3
 Encoding: UTF-8
 LazyData: true

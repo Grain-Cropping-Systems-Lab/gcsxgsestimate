@@ -1,0 +1,52 @@
+
+.legend-boxes {
+	display: flex;
+	flex-wrap: wrap;
+	margin: 1px;
+	padding: 2px;
+}
+
+.legend-box {
+	border:none;
+	border-top:5px dashed #fff;
+	background-color: white;
+	height:0px;
+	width: 50px;
+}
+
+.check_current_ppt {
+	border-top:5px solid darkblue;
+}
+
+.check_irrigation_water {
+  border-top:5px solid palegreen;
+}
+
+.check_forecast_ppt {
+  border-top:5px solid gold;
+}
+
+.check_hist_ppt {
+  border-top:5px dashed lightblue;
+}
+
+.check_forecast {
+  border-top:5px solid gold;
+}
+
+.check_n_uptake_10 {
+
+  border-top:5px dashed orangered;
+}
+
+.check_n_uptake_current {
+  border-top:5px solid orangered;
+}
+
+.check_ppt_10 {
+  border-top:5px dashed dodgerblue;
+}
+
+.check_ppt_current {
+  border-top:5px solid dodgerblue;
+}

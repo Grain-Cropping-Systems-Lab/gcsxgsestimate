@@ -1,0 +1,67 @@
+.shiny-output-error { visibility: hidden; }
+.shiny-output-error:before { visibility: hidden; }
+
+/* logo */
+.skin-blue .main-header .logo {
+	background-color: #005fae;
+}
+/* logo when hovered */
+.skin-blue .main-header .logo:hover {
+	background-color: #005fae;
+}
+/* navbar (rest of the header) */
+.skin-blue .main-header .navbar {
+	background-color: #005fae;
+}
+                        
+.box.box-solid.box-primary>.box-header {
+	color:#fff;
+	background:#005fae
+}
+
+.box.box-solid.box-primary{
+	border-bottom-color:#005fae;
+	border-left-color:#005fae;
+	border-right-color:#005fae;
+	border-top-color:#005fae;
+}
+
+.btn-landing {
+	color: #005fae;
+	background-color: #00000000;
+	border-color: #00000000;
+}
+
+.btn-landing:hover{
+	color: #3aa8e4;
+	background-color: #00000000;
+	border-color: #00000000;
+}
+
+.btn-landing:active{
+	color: #3aa8e4;
+	background-color: #00000000;
+	border-color: #00000000;
+}
+
+.btn-info {
+	color: #ffffff;
+	background-color: #00000000;
+	border-color: #00000000;
+}
+
+.btn-info:hover{
+	color: #847d77;
+	background-color: #00000000;
+	border-color: #00000000;
+}
+
+.btn-info:active{
+	color: #847d77;
+	background-color: #00000000;
+	border-color: #00000000;
+}
+
+.greyed {
+	color: #aaaaaa;
+}
