@@ -309,7 +309,7 @@ location_page_server <- function(id, parent){
 
 				}
 
-				runjs(autoscroll_to_anchor)
+				shinyjs::runjs(autoscroll_to_anchor)
 
 			})
 

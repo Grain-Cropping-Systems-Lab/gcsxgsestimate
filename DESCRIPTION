@@ -27,8 +27,12 @@ Imports:
     RPostgres,
     sf,
     shiny (>= 1.7.2),
+    shinyBS,
     shinycssloaders,
+    shinydashboard,
     shinyjs,
+    shinyWidgets,
+    stringr,
     tidyr,
     waiter
 Config/testthat/edition: 3

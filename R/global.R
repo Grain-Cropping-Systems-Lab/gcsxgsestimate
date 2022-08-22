@@ -14,7 +14,7 @@ con <- DBI::dbConnect(
   options = "-c search_path=grain,public,heroku_ext"
 )
 
-#library(dplyr)
+library(dplyr)
 
 variety_list <- readr::read_csv("data/variety_coefs.csv")
 

@@ -88,7 +88,7 @@ total_water_plot <- function(weather_data, total_water, irrigation, present_data
 		text = ~paste(label, "<br>", "Date: ", date, "<br>", "Inches: ", round(water_cumsum, 1))
 		)
 
-	fig <- fig %>% add_segments(data = irr_lines,
+	fig <- fig %>% plotly::add_segments(data = irr_lines,
 		x = ~date, y = ~marker, xend = ~enddate, yend = ~endpoint,
 		color = ~plot_group, name = ~label, line = list(width = 3),
 		text = ~paste(label, "<br>", "Date: ", date, "<br>", "Inches: ", round(amount, 1)) )
@@ -96,7 +96,7 @@ total_water_plot <- function(weather_data, total_water, irrigation, present_data
 	tick_font = list(size = 14)
 	title_font = list(size = 14)
 
-	fig <- fig %>% layout(title = plot_title, font = list(size = 11),
+	fig <- fig %>% plotly::layout(title = plot_title, font = list(size = 11),
 												xaxis = list(title = F, tickfont = tick_font, titlefont = title_font),
 												yaxis = list(title = yaxis_label, tickfont = tick_font, titlefont = title_font),
 												showlegend = T, legend = list(orientation = 'h', y = -0.25))

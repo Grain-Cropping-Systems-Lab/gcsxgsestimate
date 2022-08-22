@@ -42,7 +42,7 @@ initial_outputs_gs_ui <- function(id, label = "IO") {
 						column(6,
 									 box(title = p("Growth Stage"), solidHeader = TRUE, status = "primary", width = 12,
 									 		fluidRow(column(12, htmlOutput(ns("growth_stage_name")))),
-									 		fluidRow(column(12, img(src="images/growth_stages_linear.png", class="img-responsive"))),
+									 		fluidRow(column(12, img(src="www/growth_stages_linear.png", class="img-responsive"))),
 									 		fluidRow(column(12, class = 'slider-container', shinyWidgets::noUiSliderInput(inputId = ns("growth_stage_user_input"), label = NULL, color = "#005fae", min = 0, max = 14, value = 0, step = 0.1))),
 													 ),
 									 br(),
@@ -154,8 +154,8 @@ initial_outputs_gs_server <- function(id,
 								
 								wd <- wd_temp_present %>% 
 									bind_rows(wd_temp_historical) %>% 
-									gather(key = "measurement", value = "amount", -date, -month, -day, -time, -quality) %>%
-									drop_na(amount)
+									tidyr::gather(key = "measurement", value = "amount", -date, -month, -day, -time, -quality) %>%
+									tidyr::drop_na(amount)
 								
 #							} else {
 #								
@@ -210,8 +210,8 @@ initial_outputs_gs_server <- function(id,
 						wd_temp$feekes <- apply(as.data.frame(wd_temp$gdd_cumsum)*adjustment_factor, 1, gdd_to_feekes)
 						
 						wd <- wd_temp %>% 
-							gather(key = "measurement", value = "amount", -date, -month, -day, -time, -quality) %>%
-							drop_na(amount)
+							tidyr::gather(key = "measurement", value = "amount", -date, -month, -day, -time, -quality) %>%
+							tidyr::drop_na(amount)
 
 					}
 
@@ -227,7 +227,7 @@ initial_outputs_gs_server <- function(id,
 					
 					wd <- prelim_weather_data() %>% 
 						bind_rows(feekes) %>% 
-						drop_na(amount)
+						tidyr::drop_na(amount)
 				}
 
 				return(wd)
