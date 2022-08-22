@@ -16,7 +16,6 @@ BugReports:
 Imports: 
     config (>= 0.3.1),
     DBI,
-    dbplyr,
     dplyr,
     golem (>= 0.3.3),
     googleway,
