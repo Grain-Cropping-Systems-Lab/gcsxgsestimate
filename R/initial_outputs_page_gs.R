@@ -43,10 +43,10 @@ initial_outputs_gs_ui <- function(id, label = "IO") {
 									 box(title = p("Growth Stage"), solidHeader = TRUE, status = "primary", width = 12,
 									 		fluidRow(column(12, htmlOutput(ns("growth_stage_name")))),
 									 		fluidRow(column(12, img(src="images/growth_stages_linear.png", class="img-responsive"))),
-									 		fluidRow(column(12, class = 'slider-container', noUiSliderInput(inputId = ns("growth_stage_user_input"), label = NULL, color = "#005fae", min = 0, max = 14, value = 0, step = 0.1))),
+									 		fluidRow(column(12, class = 'slider-container', shinyWidgets::noUiSliderInput(inputId = ns("growth_stage_user_input"), label = NULL, color = "#005fae", min = 0, max = 14, value = 0, step = 0.1))),
 													 ),
 									 br(),
-									 bsButton(ns("back_to_location"), label = "Back", block = TRUE, style="default", size = "lg")#,
+									 shinyBS::bsButton(ns("back_to_location"), label = "Back", block = TRUE, style="default", size = "lg")#,
 									 #bsButton(ns("to_ssms"), label = "Next", block = TRUE, style="default", size = "lg")
 						))
 	)
@@ -69,11 +69,11 @@ initial_outputs_gs_server <- function(id,
 				if(nrow(req(prelim_weather_data())) > 0){
 
 				if(req(map_outputs()$nuptakemod) == FALSE){
-					updateNoUiSliderInput(session = parent, inputId = ns("growth_stage_user_input"), value = reverseValue(growth_stage_option()))
+				  shinyWidgets::updateNoUiSliderInput(session = parent, inputId = ns("growth_stage_user_input"), value = reverseValue(growth_stage_option()))
 				} else {
 					val <- round(gdd_to_feekes(max(isolate(prelim_weather_data())[isolate(prelim_weather_data())$quality != "forecast" & isolate(prelim_weather_data())$time == "present" & isolate(prelim_weather_data())$measurement == "gdd_cumsum", "amount"], na.rm = TRUE)), 1)
 					
-					updateNoUiSliderInput(parent, inputId = ns("growth_stage_user_input"), value = reverseValue(val))
+					shinyWidgets::updateNoUiSliderInput(parent, inputId = ns("growth_stage_user_input"), value = reverseValue(val))
 				}
 
 				}
@@ -357,14 +357,14 @@ initial_outputs_gs_server <- function(id,
 
 			observe({
 
-			output$total_water_plotly <- renderPlotly(total_water_plot(weather_data = weather_data(),
+			output$total_water_plotly <- plotly::renderPlotly(total_water_plot(weather_data = weather_data(),
 																																 total_water = weather_data(),
 																																 irrigation = irrigation(),
 																																 present_data = prelim_weather_data(),
 																																 lat = map_outputs()$lat,
 																																 long = map_outputs()$lon))
 
-			output$nuptake_plotly <- renderPlotly(graph_nuptake_plotly(weather_data = weather_data(),
+			output$nuptake_plotly <- plotly::renderPlotly(graph_nuptake_plotly(weather_data = weather_data(),
 																																 lat = map_outputs()$lat,
 																																 long = map_outputs()$lon,
 																																 nuptake_mod = map_outputs()$nuptakemod))

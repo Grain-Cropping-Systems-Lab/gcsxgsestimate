@@ -13,7 +13,7 @@ browser_navigation <- function(input, output, session){
 		autoNavigating = 0
 	)
 
-	runjs(autoscroll_to_anchor)
+	shinyjs::runjs(autoscroll_to_anchor)
 
 	# restore the Shiny app's state based on the URL
 	restore <- function(qs) {

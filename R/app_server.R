@@ -8,11 +8,11 @@ app_server <- function(input, output, session) {
   # Your application server logic
   browser_navigation(input, output, session)
   
-  runjs(slider_js)
+  shinyjs::runjs(slider_js)
   
   # scroll to to whenever tabs are changed
   observeEvent(input$tabs, {
-    runjs(autoscroll_to_anchor)
+    shinyjs::runjs(autoscroll_to_anchor)
   })
   
   
