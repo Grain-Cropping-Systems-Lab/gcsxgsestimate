@@ -20,6 +20,5 @@ devtools::check()
 # Deploy
 
 ## Docker ----
-## If you want to deploy via a generic Dockerfile
 golem::add_dockerfile_with_renv_heroku(output_dir = "deploy")
 

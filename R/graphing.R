@@ -24,6 +24,21 @@ nuptake_lines <- data.frame(
 
 rownames(nuptake_lines) <- nuptake_lines$var
 
+
+gdd_lines <- data.frame(
+  var = c("forecast", "gdd_cumsum.historical", "gdd_cumsum.present"),
+  label = c("Forecast", "Cumulative GDD (10-yr avg)", "Cumulative GDD (current season)"),
+  color = c("gold", "orangered", "orangered"),
+  style = c("1111", "dash", "solid"),
+  alpha = c(1, .4, 1),
+  check = c("check_forecast", "check_gdd_10", "check_gdd_current"),
+  render = c(T, F, T),
+  
+  stringsAsFactors=FALSE
+)
+
+rownames(gdd_lines) <- gdd_lines$var
+
 create_checkboxes_from_data <- function(specs, data_raw, type, nuptake_mod) {
 
 	if(nuptake_mod == F) {

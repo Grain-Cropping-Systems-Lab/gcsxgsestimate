@@ -15,6 +15,10 @@ initial_outputs_gs_ui <- function(id, label = "IO") {
 									 		),
 									 		fluidRow(
 									 			column(12,
+									 			       conditionalPanel(
+									 			         condition = "input.which_plot == 'Cumlative GDD'", ns = ns,
+									 			         plotly::plotlyOutput(ns("gdd_plotly")) %>% shinycssloaders::withSpinner(type = 6, color="#005fae")
+									 			       ),
 									 						 conditionalPanel(
 									 						 	condition = "input.which_plot == 'N uptake/Precip. (%)'", ns = ns,
 									 						 	plotly::plotlyOutput(ns("nuptake_plotly")) %>% shinycssloaders::withSpinner(type = 6, color="#005fae")
@@ -28,8 +32,8 @@ initial_outputs_gs_ui <- function(id, label = "IO") {
 									 		fluidRow(
 									 			column(12,
 									 						 radioButtons(ns("which_plot"),"",
-									 						 						 choices = c("N uptake/Precip. (%)", "Seasonal Water (in.)"),
-									 						 						 selected = "N uptake/Precip. (%)", inline = TRUE)
+									 						 						 choices = c("Cumlative GDD", "N uptake/Precip. (%)", "Seasonal Water (in.)"),
+									 						 						 selected = "Cumlative GDD", inline = TRUE)
 									 			)
 									 		),
 									 		fluidRow(
@@ -368,6 +372,11 @@ initial_outputs_gs_server <- function(id,
 																																 lat = map_outputs()$lat,
 																																 long = map_outputs()$lon,
 																																 nuptake_mod = map_outputs()$nuptakemod))
+			
+			output$gdd_plotly <- plotly::renderPlotly(graph_gdd_plotly(weather_data = weather_data(),
+			                                                                   lat = map_outputs()$lat,
+			                                                                   long = map_outputs()$lon,
+			                                                                   nuptake_mod = map_outputs()$nuptakemod))
 
 
 
