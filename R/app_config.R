@@ -9,7 +9,7 @@
 #'
 #' @noRd
 app_sys <- function(...) {
-  system.file(..., package = "gcsxnmanagement")
+  system.file(..., package = "gcsxgsestimate")
 }
 
 

@@ -1,3 +1,10 @@
+#' @import s2
+
+# switch off s2 geometries 
+#print("s2 geometires turning off")
+#sf::sf_use_s2(FALSE)
+#print("s2 geometires turned off")
+
 location_page_ui <- function(id, label = "Location") {
 	ns <- NS(id)
 	shinydashboard::tabItem(tabName = "location",
