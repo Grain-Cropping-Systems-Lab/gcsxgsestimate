@@ -1,12 +1,12 @@
-#' @import s2
-
-# switch off s2 geometries 
-#print("s2 geometires turning off")
-#sf::sf_use_s2(FALSE)
-#print("s2 geometires turned off")
-
 location_page_ui <- function(id, label = "Location") {
 	ns <- NS(id)
+	
+	variety_list <- readr::read_csv("data/variety_coefs.csv")
+	
+	variety_list <-  dplyr::arrange(dplyr::filter(variety_list, is.na(name)), label) 
+	
+	api_key <- golem::get_golem_options("MAPS_API_KEY")
+	
 	shinydashboard::tabItem(tabName = "location",
 					fluidRow(
 						column(6,
@@ -17,23 +17,7 @@ location_page_ui <- function(id, label = "Location") {
 									 box(title = p("Period of interest"), solidHeader = TRUE, status = "primary", width = 12,
 									 		HTML(paste0("Choose dates below that begin with the planting date and span the period of interest. The date
 range is limited to one ", actionLink(ns("actionlink"), "wheat growing season"), ". A 10-day forecast is available for locations in the Central Valley and desert regions.")),
-									 		dateRangeInput(ns('daterange'), label = "", format = 'mm/dd/yyyy',
-									 									 start = if_else(as.Date(paste0(lubridate::year(Sys.Date()),
-									 									 															 "-11-15")) <= Sys.Date(),
-									 									 								as.Date(paste0(lubridate::year(Sys.Date()), "-11-15")),
-									 									 								if_else(as.Date(paste0(lubridate::year(Sys.Date()),
-									 									 																			 "-10-01")) <= Sys.Date(),
-									 									 												as.Date(paste0(lubridate::year(Sys.Date()),
-									 									 																			 "-10-01")), as.Date(paste0(lubridate::year(Sys.Date())-1, "-11-15")))),
-									 									 end = if_else(
-									 									 	as.Date(paste0(lubridate::year(Sys.Date()), "-06-30")) >= Sys.Date(),
-									 									 	max_forecast_date$date,
-									 									 	if_else(as.Date(paste0(lubridate::year(Sys.Date()),
-									 									 												 "-10-01")) <= Sys.Date(),
-									 									 					max_forecast_date$date,	as.Date(paste0(lubridate::year(Sys.Date()),"-06-30")))),
-									 									 min = as.Date("2009-01-01"),
-									 									 max = max(max_forecast_date$date, max_prism_date$date)
-									 									))),
+									 		uiOutput(outputId = ns("daterange")))),
 						column(6,
 									 conditionalPanel(condition = "output.nuptake_panel", ns = ns,
 									 								 box(title = p("Growth Stage"), solidHeader = TRUE, status = "primary", width = 12,
@@ -79,51 +63,85 @@ range is limited to one ", actionLink(ns("actionlink"), "wheat growing season"),
 	)
 }
 
-location_page_server <- function(id, parent){
+location_page_server <- function(id, parent, con){
 	moduleServer(
 		id,
 		function(input, output, session){
 
 			ns <- session$ns
+			
+			max_forecast_date <- DBI::dbGetQuery(con, "SELECT DISTINCT(date) FROM grain.prism WHERE quality = 'forecast' ORDER BY date DESC LIMIT 1;")
+			
+			if (length(max_forecast_date$date) == 0){
+			  max_forecast_date <- data.frame(date = as.Date("2009-01-01"))
+			}
+			
+			max_prism_date <- DBI::dbGetQuery(con, "SELECT DISTINCT(date) FROM grain.prism WHERE quality != 'forecast' ORDER BY date DESC LIMIT 1;")
+			
+			print(max_prism_date)
+			
+			output$daterange <- renderUI({
+			  dateRangeInput(session$ns('daterange'), label = "", format = 'mm/dd/yyyy',
+			                 start = if_else(as.Date(paste0(lubridate::year(Sys.Date()),
+			                                                "-11-15")) <= Sys.Date(),
+			                                 as.Date(paste0(lubridate::year(Sys.Date()), "-11-15")),
+			                                 if_else(as.Date(paste0(lubridate::year(Sys.Date()),
+			                                                        "-10-01")) <= Sys.Date(),
+			                                         as.Date(paste0(lubridate::year(Sys.Date()),
+			                                                        "-10-01")), as.Date(paste0(lubridate::year(Sys.Date())-1, "-11-15")))),
+			                 end = if_else(
+			                   as.Date(paste0(lubridate::year(Sys.Date()), "-06-30")) >= Sys.Date(),
+			                   max_forecast_date$date,
+			                   if_else(as.Date(paste0(lubridate::year(Sys.Date()),
+			                                          "-10-01")) <= Sys.Date(),
+			                           max_forecast_date$date,	as.Date(paste0(lubridate::year(Sys.Date()),"-06-30")))),
+			                 min = as.Date("2009-01-01"),
+			                 max = max(max_forecast_date$date, max_prism_date$date)
+			  )
+			})
+			
+			
+			
 			map_outputs <- map_mod_server("map_mod",
 																		shapefile_path = "data/ca_wheat_regions.shp",
 																		region_behavior = region_behavior_nmanagement,
 																		default_lat = 38.533867,
 																		default_lon = -121.771598,
 																		scope_id = id)
-
+			
 			observe({
-				if (as.logical(req(map_outputs$nuptakemod)) == TRUE){
-					updateDateRangeInput(session = session, inputId = 'daterange', label = "",
-															 start = isolate(input$daterange[1]),
-															 end = if_else(isolate(input$daterange[2]) == if_else(as.Date(paste0(lubridate::year(Sys.Date()), "-08-31")) >= max_prism_date$date,
-															 																						max_prism_date$date,
-															 																						as.Date(paste0(lubridate::year(Sys.Date()),"-08-31"))),
-															 							if_else(as.Date(paste0(lubridate::year(Sys.Date()), "-06-30")) >= max_prism_date$date,
-															 											max_forecast_date$date,
-															 											as.Date(paste0(lubridate::year(Sys.Date()),"-06-30"))),
-															 							isolate(input$daterange[2])),
-															 min = as.Date("2009-01-01"), max = max(max_forecast_date$date, max_prism_date$date))
-				} else {
-					updateDateRangeInput(session = session, inputId = 'daterange', label = "",
-															 start = if_else(isolate(input$daterange[1]) > max_prism_date$date, max_prism_date$date, isolate(input$daterange[1])),
-															 end = if_else(isolate(input$daterange[2]) == if_else(as.Date(paste0(lubridate::year(Sys.Date()), "-06-30")) >= max_prism_date$date,
-															 																						max_forecast_date$date,
-															 																						as.Date(paste0(lubridate::year(Sys.Date()),"-06-30"))),
-															 							if_else(as.Date(paste0(lubridate::year(Sys.Date()), "-08-31")) >= max_prism_date$date,
-															 											max_prism_date$date,
-															 											as.Date(paste0(lubridate::year(Sys.Date()),"-08-31"))),
-															 							if_else(isolate(input$daterange[2]) > max_prism_date$date, max_prism_date$date, isolate(input$daterange[2]))),
-															 min = as.Date("2009-01-01"), max = max_prism_date$date)
-				}
+			  if (as.logical(req(map_outputs$nuptakemod)) == TRUE){
+			    updateDateRangeInput(session = session, inputId = 'daterange', label = "",
+			                         start = req(input$daterange[1]),
+			                         end = if_else(req(input$daterange[2]) == if_else(as.Date(paste0(lubridate::year(Sys.Date()), "-08-31")) >= max_prism_date$date,
+			                                                                          max_prism_date$date,
+			                                                                          as.Date(paste0(lubridate::year(Sys.Date()),"-08-31"))),
+			                                       if_else(as.Date(paste0(lubridate::year(Sys.Date()), "-06-30")) >= max_prism_date$date,
+			                                               max_forecast_date$date,
+			                                               as.Date(paste0(lubridate::year(Sys.Date()),"-06-30"))),
+			                                       req(input$daterange[2])),
+			                         min = as.Date("2009-01-01"), max = max(max_forecast_date$date, max_prism_date$date))
+			  } else {
+			    updateDateRangeInput(session = session, inputId = 'daterange', label = "",
+			                         start = if_else(req(input$daterange[1]) > max_prism_date$date, max_prism_date$date, req(input$daterange[1])),
+			                         end = if_else(req(input$daterange[2]) == if_else(as.Date(paste0(lubridate::year(Sys.Date()), "-06-30")) >= max_prism_date$date,
+			                                                                          max_forecast_date$date,
+			                                                                          as.Date(paste0(lubridate::year(Sys.Date()),"-06-30"))),
+			                                       if_else(as.Date(paste0(lubridate::year(Sys.Date()), "-08-31")) >= max_prism_date$date,
+			                                               max_prism_date$date,
+			                                               as.Date(paste0(lubridate::year(Sys.Date()),"-08-31"))),
+			                                       if_else(req(input$daterange[2]) > max_prism_date$date, max_prism_date$date, req(input$daterange[2]))),
+			                         min = as.Date("2009-01-01"), max = max_prism_date$date)
+			  }
+			  
+			  output$nuptake_panel = reactive({
+			    !as.logical(req(map_outputs$nuptakemod))
+			  })
+			  
+			  outputOptions(output, "nuptake_panel", suspendWhenHidden = FALSE)
+			  
+			})	
 
-				output$nuptake_panel = reactive({
-					!as.logical(req(map_outputs$nuptakemod))
-				})
-
-				outputOptions(output, "nuptake_panel", suspendWhenHidden = FALSE)
-
-			})
 
 			observeEvent(input$actionlink, {
 				showModal(
@@ -146,17 +164,32 @@ location_page_server <- function(id, parent){
 			deleteFile = FALSE)
 
 			irrigation_memory <- clear_irrigation_memory()
-
-			observeEvent(input$numIrr, {
-				if(input$numIrr > 0) {
-					irrigation_memory <- memoize_irrigation(input, irrigation_memory)
-					output$inputGroup = build_memoized_irrigation_amounts(input$numIrr, irrigation_memory, session = session)
-					output$dateGroup =
-						build_memoized_irrigation_dates(isolate(input$numIrr),
-																						isolate(input$daterange[1]),
-																						isolate(input$daterange[2]), irrigation_memory, session = session)
-				}
+			
+			observe({
+			  if(is.null(input[["daterange"]])){
+			    print("DATERANGE IS NULL")
+			  } else {
+			    print("input test")
+			    print(input[["daterange"]]) # this is printing NULL only at startup and causing the app to crash
+			  }
+			  
 			})
+			
+			observeEvent(input$numIrr, {
+			  if(input$numIrr > 0) {
+			    print("there is irrigation")
+			    if(!is.null(input$daterange)){
+			      irrigation_memory <- memoize_irrigation(input, irrigation_memory)
+			      output$inputGroup = build_memoized_irrigation_amounts(input$numIrr, irrigation_memory, session = session)
+			      output$dateGroup =
+			        build_memoized_irrigation_dates(isolate(input$numIrr),
+			                                        req(input$daterange[1]),
+			                                        req(input$daterange[2]),
+			                                        irrigation_memory, session = session)
+			    }
+			  }
+			})
+			
 
 			irrigation <- reactiveVal(data.frame(date = as.Date(character()), amount = numeric()))
 			bind_data <- reactiveVal(data.frame(date = as.Date(character()), month = numeric(),
@@ -165,6 +198,8 @@ location_page_server <- function(id, parent){
 																					amount = numeric()))
 
 			observeEvent(input$switchtab, {
+			  
+			  print('INITIATE SWITCH')
 
 
 				if (input$irrigation == 1){
@@ -195,127 +230,131 @@ location_page_server <- function(id, parent){
 																	irrigation_input = input$irrigation,
 																	irrigation = irrigation(),
 																	region = map_outputs$region)
-
-
+				
+				
 				if(date_check == TRUE & irrigation_check == TRUE){
-					shinyBS::updateButton(parent, inputId = "switchtab", label = "Next", block = TRUE, style="default", size = "lg", disabled = TRUE)
-
-					updateTabItems(parent, "tabs", "initial_outputs")
-
-					variety_coef <- variety_list %>%
-						filter(label == input$variety) %>%
-						select(coef) %>%
-						as.numeric()
-
-					withProgress(message = "Gathering current and historical season data...", value = 0, min = 0, max = 100, {
-
-						historical_data <- prism_historical_season_all(con = con,
-																													 lat = map_outputs$lat,
-																													 long = map_outputs$lon,
-																													 current_start_date = input$daterange[1],
-																													 end_date = if_else((map_outputs$region == "IR" |  is.na(map_outputs$region)) & lubridate::month(input$daterange[2]) > 9 & lubridate::year(input$daterange[1]) != lubridate::year(input$daterange[2]),
-																													 									 input$daterange[2],
-																													 									 if_else((map_outputs$region == "IR" |  is.na(map_outputs$region)) & lubridate::year(input$daterange[1]) != lubridate::year(input$daterange[2]),
-																													 									 				as.Date(paste0(lubridate::year(input$daterange[2]), "-08-31")),
-																													 									 				if_else((map_outputs$region == "IR" |  is.na(map_outputs$region)) & lubridate::year(input$daterange[1]) == lubridate::year(input$daterange[2]) & lubridate::month(input$daterange[1]) >= 10,
-																													 									 								as.Date(paste0(lubridate::year(input$daterange[2]) + 1, "-08-31")),
-																													 									 								if_else((map_outputs$region == "IR" |  is.na(map_outputs$region)) & lubridate::year(input$daterange[1]) == lubridate::year(input$daterange[2]) & lubridate::month(input$daterange[1]) < 10,
-																													 									 												as.Date(paste0(lubridate::year(input$daterange[2]), "-08-31")),
-																													 									 												if_else(map_outputs$region != "IR" & lubridate::month(input$daterange[2]) > 7 & lubridate::year(input$daterange[1]) != lubridate::year(input$daterange[2]),
-																													 									 																input$daterange[2],
-																													 									 																if_else(map_outputs$region != "IR" & lubridate::year(input$daterange[1]) != lubridate::year(input$daterange[2]),
-																													 									 																				as.Date(paste0(lubridate::year(input$daterange[2]), "-06-30")),
-																													 									 																				if_else(map_outputs$region != "IR" & lubridate::year(input$daterange[1]) == lubridate::year(input$daterange[2]) & lubridate::month(input$daterange[1]) >= 10,
-																													 									 																								as.Date(paste0(lubridate::year(input$daterange[2]) + 1, "-06-30")),
-																													 									 																								as.Date(paste0(lubridate::year(input$daterange[2]), "-06-30"))
-																													 									 																				)
-																													 									 																)
-																													 									 												)
-																													 									 								)
-																													 									 				)
-																													 									 )
-																													 )
-						)
-
-						incProgress(10)
-
-						present_data <- prism_date_range_all(con = con, lat = map_outputs$lat, long = map_outputs$lon, from_date = input$daterange[1], to_date = input$daterange[2])
-
-						# remove forecast data that overlaps with PRISM data and NA's
-						removes <- present_data %>%
-							group_by(date) %>%
-							filter(n()>1) %>%
-							filter(quality == "forecast")
-
-						present_data <- anti_join(present_data, removes) %>% # recalculate cumulative sums in case there was a failed data point in PRISM or forecast
-							mutate(precip_cumsum = cumsum(ppt),
-										 gdd_cumsum = cumsum(gdd),
-										 nuptake_perc = gdd_to_nuptake(gdd_cumsum),
-										 rel_precip_cumsum = precip_cumsum/max(historical_data$precip_cumsum)*100,
-										 nuptake_perc = gdd_to_nuptake(gdd_cumsum*variety_coef)) %>%
-							tidyr::drop_na()
-
-						shinyBS::updateButton(session, inputId = "switchtab", label = "Next", block = TRUE, style="default", size = "lg", disabled = FALSE)
-					}) # end of progress bar tracking
-
-					if (input$moisture == 0) {
-						if(input$irrigation == 1){
-							#print(names(irrigation()))
-							first_water <- min(c(min(irrigation()[irrigation()$amount > 0, "date"]), min(present_data[present_data$ppt > 0, "date"])))
-							#print(paste0("first water: ", first_water))
-							present_data <- present_data %>%
-								mutate(gdd_temp = if_else(date < first_water, 0, gdd),
-											 gdd_cumsum = cumsum(gdd_temp),
-											 nuptake_perc = gdd_to_nuptake(gdd_cumsum*variety_coef)) %>%
-								select(-gdd_temp)
-
-							# moving the beginning of the historical N uptake to the current season's first irrigation
-							historical_data <- historical_data %>%
-								mutate(gdd_temp = if_else(pseudo_date < first_water, 0, gdd),
-											 gdd_cumsum = cumsum(gdd_temp),
-											 nuptake_perc = gdd_to_nuptake(gdd_cumsum*variety_coef)) %>%
-								select(-gdd_temp)
-
-						} else{
-
-							first_ppt <- min(present_data[present_data$ppt > 0, "date"], na.rm = TRUE)
-							present_data <- present_data %>%
-								mutate(gdd_temp = if_else(date < first_ppt, 0, gdd),
-											 gdd_cumsum = cumsum(gdd_temp),
-											 nuptake_perc = gdd_to_nuptake(gdd_cumsum*variety_coef)) %>%
-								select(-gdd_temp)
-
-							# moving the beginning of the historical N uptake to the current season's first rainfall
-							historical_data <- historical_data %>%
-								mutate(gdd_temp = if_else(pseudo_date < first_ppt, 0, gdd),
-											 gdd_cumsum = cumsum(gdd_temp),
-											 nuptake_perc = gdd_to_nuptake(gdd_cumsum*variety_coef)) %>%
-								select(-gdd_temp)
-
-						}
-
-					}
-
-					historical_data_long <- historical_data %>%
-						mutate(time = "historical",
-									 quality = "historical",
-									 date = pseudo_date) %>%
-						select(-pseudo_date) %>%
-						tidyr::gather(measurement, amount, -date, -month, -day, -time, -quality)
-
-					present_data_long <- present_data %>%
-						mutate(time = "present",
-									 quality = if_else(quality == "forecast", "forecast", "prism")) %>%
-						tidyr::gather(measurement, amount, -date, -month, -day, -time, -quality)
-
-					bind_data(data.frame(date = as.Date(character()), month = numeric(),
-															 day = numeric(), quality = character(),
-															 time = character(), measurement = character(),
-															 amount = numeric()))
-					bind_data(bind_rows(bind_data(), present_data_long, historical_data_long))
-
+				  shinyBS::updateButton(parent, inputId = "switchtab", label = "Next", block = TRUE, style="default", size = "lg", disabled = TRUE)
+				  
+				  updateTabItems(parent, "tabs", "initial_outputs")
+				  
+				  variety_coef <- variety_list %>%
+				    filter(label == input$variety) %>%
+				    select(coef) %>%
+				    as.numeric()
+				  
+				  withProgress(message = "Gathering current and historical season data...", value = 0, min = 0, max = 100, {
+				    
+				    historical_data <- prism_historical_season_all(con = con,
+				                                                   lat = map_outputs$lat,
+				                                                   long = map_outputs$lon,
+				                                                   current_start_date = input$daterange[1],
+				                                                   end_date = if_else((map_outputs$region == "IR" |  is.na(map_outputs$region)) & lubridate::month(input$daterange[2]) > 9 & lubridate::year(input$daterange[1]) != lubridate::year(input$daterange[2]),
+				                                                                      input$daterange[2],
+				                                                                      if_else((map_outputs$region == "IR" |  is.na(map_outputs$region)) & lubridate::year(input$daterange[1]) != lubridate::year(input$daterange[2]),
+				                                                                              as.Date(paste0(lubridate::year(input$daterange[2]), "-08-31")),
+				                                                                              if_else((map_outputs$region == "IR" |  is.na(map_outputs$region)) & lubridate::year(input$daterange[1]) == lubridate::year(input$daterange[2]) & lubridate::month(input$daterange[1]) >= 10,
+				                                                                                      as.Date(paste0(lubridate::year(input$daterange[2]) + 1, "-08-31")),
+				                                                                                      if_else((map_outputs$region == "IR" |  is.na(map_outputs$region)) & lubridate::year(input$daterange[1]) == lubridate::year(input$daterange[2]) & lubridate::month(input$daterange[1]) < 10,
+				                                                                                              as.Date(paste0(lubridate::year(input$daterange[2]), "-08-31")),
+				                                                                                              if_else(map_outputs$region != "IR" & lubridate::month(input$daterange[2]) > 7 & lubridate::year(input$daterange[1]) != lubridate::year(input$daterange[2]),
+				                                                                                                      input$daterange[2],
+				                                                                                                      if_else(map_outputs$region != "IR" & lubridate::year(input$daterange[1]) != lubridate::year(input$daterange[2]),
+				                                                                                                              as.Date(paste0(lubridate::year(input$daterange[2]), "-06-30")),
+				                                                                                                              if_else(map_outputs$region != "IR" & lubridate::year(input$daterange[1]) == lubridate::year(input$daterange[2]) & lubridate::month(input$daterange[1]) >= 10,
+				                                                                                                                      as.Date(paste0(lubridate::year(input$daterange[2]) + 1, "-06-30")),
+				                                                                                                                      as.Date(paste0(lubridate::year(input$daterange[2]), "-06-30"))
+				                                                                                                              )
+				                                                                                                      )
+				                                                                                              )
+				                                                                                      )
+				                                                                              )
+				                                                                      )
+				                                                   )
+				    )
+				    
+				    incProgress(10)
+				    
+				    present_data <- prism_date_range_all(con = con, lat = map_outputs$lat, long = map_outputs$lon, from_date = input$daterange[1], to_date = input$daterange[2])
+				    
+				    # remove forecast data that overlaps with PRISM data and NA's
+				    removes <- present_data %>%
+				      group_by(date) %>%
+				      filter(n()>1) %>%
+				      filter(quality == "forecast")
+				    
+				    present_data <- anti_join(present_data, removes) %>% # recalculate cumulative sums in case there was a failed data point in PRISM or forecast
+				      mutate(precip_cumsum = cumsum(ppt),
+				             gdd_cumsum = cumsum(gdd),
+				             nuptake_perc = gdd_to_nuptake(gdd_cumsum),
+				             rel_precip_cumsum = precip_cumsum/max(historical_data$precip_cumsum)*100,
+				             nuptake_perc = gdd_to_nuptake(gdd_cumsum*variety_coef)) %>%
+				      tidyr::drop_na()
+				    
+				    shinyBS::updateButton(session, inputId = "switchtab", label = "Next", block = TRUE, style="default", size = "lg", disabled = FALSE)
+				  }) # end of progress bar tracking
+				  
+				  if (input$moisture == 0) {
+				    if(input$irrigation == 1){
+				      #print(names(irrigation()))
+				      first_water <- min(c(min(irrigation()[irrigation()$amount > 0, "date"]), min(present_data[present_data$ppt > 0, "date"])))
+				      #print(paste0("first water: ", first_water))
+				      present_data <- present_data %>%
+				        mutate(gdd_temp = if_else(date < first_water, 0, gdd),
+				               gdd_cumsum = cumsum(gdd_temp),
+				               nuptake_perc = gdd_to_nuptake(gdd_cumsum*variety_coef)) %>%
+				        select(-gdd_temp)
+				      
+				      # moving the beginning of the historical N uptake to the current season's first irrigation
+				      historical_data <- historical_data %>%
+				        mutate(gdd_temp = if_else(pseudo_date < first_water, 0, gdd),
+				               gdd_cumsum = cumsum(gdd_temp),
+				               nuptake_perc = gdd_to_nuptake(gdd_cumsum*variety_coef)) %>%
+				        select(-gdd_temp)
+				      
+				    } else{
+				      
+				      first_ppt <- min(present_data[present_data$ppt > 0, "date"], na.rm = TRUE)
+				      present_data <- present_data %>%
+				        mutate(gdd_temp = if_else(date < first_ppt, 0, gdd),
+				               gdd_cumsum = cumsum(gdd_temp),
+				               nuptake_perc = gdd_to_nuptake(gdd_cumsum*variety_coef)) %>%
+				        select(-gdd_temp)
+				      
+				      # moving the beginning of the historical N uptake to the current season's first rainfall
+				      historical_data <- historical_data %>%
+				        mutate(gdd_temp = if_else(pseudo_date < first_ppt, 0, gdd),
+				               gdd_cumsum = cumsum(gdd_temp),
+				               nuptake_perc = gdd_to_nuptake(gdd_cumsum*variety_coef)) %>%
+				        select(-gdd_temp)
+				      
+				    }
+				    
+				  }
+				  
+				  historical_data_long <- historical_data %>%
+				    mutate(time = "historical",
+				           quality = "historical",
+				           date = pseudo_date) %>%
+				    select(-pseudo_date) %>%
+				    tidyr::gather(measurement, amount, -date, -month, -day, -time, -quality)
+				  
+				  present_data_long <- present_data %>%
+				    mutate(time = "present",
+				           quality = if_else(quality == "forecast", "forecast", "prism")) %>%
+				    tidyr::gather(measurement, amount, -date, -month, -day, -time, -quality)
+				  
+				  bind_data(data.frame(date = as.Date(character()), month = numeric(),
+				                       day = numeric(), quality = character(),
+				                       time = character(), measurement = character(),
+				                       amount = numeric()))
+				  bind_data(bind_rows(bind_data(), present_data_long, historical_data_long))
+				  
 				}
+				
 
+
+				
+				
 				shinyjs::runjs(autoscroll_to_anchor)
 
 			})

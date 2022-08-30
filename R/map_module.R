@@ -1,3 +1,5 @@
+#' @import dplyr
+
 gen_nested_id <- function(id, widget_id, scope_id = '') {
 
 	if(scope_id == '')

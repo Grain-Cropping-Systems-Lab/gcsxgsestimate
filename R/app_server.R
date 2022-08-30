@@ -3,10 +3,28 @@
 #' @param input,output,session Internal parameters for {shiny}.
 #'     DO NOT REMOVE.
 #' @import shiny
+#' @import dplyr
 #' @noRd
 
 app_server <- function(input, output, session) {
   # Your application server logic
+  
+  db_creds <- httr::parse_url(golem::get_golem_options("DATABASE_URL"))
+  
+  con <- DBI::dbConnect(
+      RPostgres::Postgres(),
+      dbname = db_creds$path,
+      host = db_creds$hostname,
+      port = db_creds$port,
+      user = db_creds$username,
+      password = db_creds$password,
+      sslmode = "require",
+      options = "-c search_path=grain,public,heroku_ext"
+    )
+
+  # switch off s2 geometries 
+  sf::sf_use_s2(FALSE)
+  
   browser_navigation(input, output, session)
   
   shinyjs::runjs(slider_js)
@@ -19,7 +37,7 @@ app_server <- function(input, output, session) {
   
   dashboard_header_server("header")
   
-  location_outputs <- location_page_server("location", parent = session)
+  location_outputs <- location_page_server("location", parent = session, con = con)
   initial_outputs <- initial_outputs_gs_server("initial_outputs",
                                                parent = session,
                                                map_outputs = location_outputs$map_outputs,

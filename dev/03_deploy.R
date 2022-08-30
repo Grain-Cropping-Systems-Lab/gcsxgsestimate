@@ -18,7 +18,10 @@
 devtools::check()
 
 # build check
-devtools::build()
+devtools::build(path = "C:/Users/Taylor/Desktop")
+
+gcsxgsestimate::run_app(DATABASE_URL = "postgres://u6b45hj5hg8vmd:pa502eeb5448c25379665d7961334d0019d28f1b413f189acf29c8978808a799f@ec2-44-209-196-14.compute-1.amazonaws.com:5432/d48k64vr72n4m0",
+                        MAPS_API_KEY = "AIzaSyDprIIkJiGAGD54c9IjmL78MANoUryH2dc")
 
 # Deploy
 

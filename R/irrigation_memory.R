@@ -11,13 +11,17 @@ clear_irrigation_memory <- function() {
 memoize_irrigation <- function(input, memory) {
 
 	irrigation_memory <- memory
+	
+	print(irrigation_memory)
+	print(input$numIrr)
+	print(input$daterange[1])
 
 	# only rebuild memory if we are increasing the number of slots
 	if(req(input$numIrr) > nrow(irrigation_memory)) {
 		# nuke existing data
 		irrigation_memory <- clear_irrigation_memory()
 
-		# save key:val to memoization df
+		# save key:val to memorization df
 		lapply(1:input$numIrr, function(i) {
 			inputName <- paste("Irrigation", i, sep = "")
 			dateName <- paste("Date", i, sep = "")
