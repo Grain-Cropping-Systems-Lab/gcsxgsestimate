@@ -27,5 +27,5 @@ gcsxgsestimate::run_app(DATABASE_URL = "postgres://u6b45hj5hg8vmd:pa502eeb5448c2
 
 ## Docker ----
 golem::add_dockerfile_heroku()
-#golem::add_dockerfile_with_renv_heroku(output_dir = "deploy")
+golem::add_dockerfile_with_renv_heroku(output_dir = "deploy")
 

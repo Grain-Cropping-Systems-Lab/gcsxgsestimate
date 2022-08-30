@@ -99,7 +99,7 @@ location_page_server <- function(id, parent, con){
 			
 			
 			map_outputs <- map_mod_server("map_mod",
-																		shapefile_path = "data/ca_wheat_regions.shp",
+																		shapefile_path = "inst/extdata/ca_wheat_regions.shp",
 																		region_behavior = region_behavior_nmanagement,
 																		default_lat = 38.533867,
 																		default_lon = -121.771598,
@@ -154,7 +154,7 @@ location_page_server <- function(id, parent, con){
 			})
 
 			output$growingSeasonImage <- renderImage({
-				filename <- "data/testing_tooltip.PNG"
+				filename <- "inst/extdata/testing_tooltip.PNG"
 
 				# Return a list containing the filename and alt text
 				list(src = filename,
