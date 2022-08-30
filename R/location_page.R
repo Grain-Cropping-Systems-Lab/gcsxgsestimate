@@ -1,12 +1,6 @@
 location_page_ui <- function(id, label = "Location") {
 	ns <- NS(id)
 	
-	variety_list <- readr::read_csv("data/variety_coefs.csv")
-	
-	variety_list <-  dplyr::arrange(dplyr::filter(variety_list, is.na(name)), label) 
-	
-	api_key <- golem::get_golem_options("MAPS_API_KEY")
-	
 	shinydashboard::tabItem(tabName = "location",
 					fluidRow(
 						column(6,
@@ -32,7 +26,7 @@ range is limited to one ", actionLink(ns("actionlink"), "wheat growing season"),
 									 conditionalPanel(condition = "!output.nuptake_panel",
 									 								 box(title = p("Crop Variety"), solidHeader = TRUE, status = "primary", width = 12,
 									 		p("Choose the crop type or variety (if known) for the field of interest."),
-									 		selectInput(inputId = ns("variety"), label = "", choices = variety_list$label, selected = "AVERAGE COMMON"))),
+									 		uiOutput(outputId = ns("variety")))),
 									 box(title = p("Irrigation"), solidHeader = TRUE, status = "primary", width = 12,
 									 		checkboxInput(ns("moisture"), "This field was planted into moisture or irrigated up.", value = FALSE),
 									 		checkboxInput(ns("irrigation"), "This field was irrigated.", value = FALSE),
@@ -78,7 +72,9 @@ location_page_server <- function(id, parent, con){
 			
 			max_prism_date <- DBI::dbGetQuery(con, "SELECT DISTINCT(date) FROM grain.prism WHERE quality != 'forecast' ORDER BY date DESC LIMIT 1;")
 			
-			print(max_prism_date)
+			variety_list <- readr::read_csv("data/variety_coefs.csv")
+			
+			variety_list <-  dplyr::arrange(dplyr::filter(variety_list, is.na(name)), label) 
 			
 			output$daterange <- renderUI({
 			  dateRangeInput(session$ns('daterange'), label = "", format = 'mm/dd/yyyy',
@@ -152,6 +148,10 @@ location_page_server <- function(id, parent, con){
 					)
 				)
 			})
+			
+			output$variety <- renderUI({
+			  selectInput(inputId = session$ns("variety"), label = "", choices = variety_list$label, selected = "AVERAGE COMMON")
+			})
 
 			output$growingSeasonImage <- renderImage({
 				filename <- "../files/testing_tooltip.PNG"
@@ -164,16 +164,6 @@ location_page_server <- function(id, parent, con){
 			deleteFile = FALSE)
 
 			irrigation_memory <- clear_irrigation_memory()
-			
-			observe({
-			  if(is.null(input[["daterange"]])){
-			    print("DATERANGE IS NULL")
-			  } else {
-			    print("input test")
-			    print(input[["daterange"]]) # this is printing NULL only at startup and causing the app to crash
-			  }
-			  
-			})
 			
 			observeEvent(input$numIrr, {
 			  if(input$numIrr > 0) {
@@ -200,6 +190,7 @@ location_page_server <- function(id, parent, con){
 			observeEvent(input$switchtab, {
 			  
 			  print('INITIATE SWITCH')
+			  print(variety_list)
 
 
 				if (input$irrigation == 1){
@@ -225,11 +216,16 @@ location_page_server <- function(id, parent, con){
 				if(irrigation_check == FALSE){
 					showNotification("Error: Irrigation amounts out of bounds!", id = "irrigation_error")
 				}
+				
+				print("stop 1")
 
 				date_check <- check_dates(daterange = input$daterange,
 																	irrigation_input = input$irrigation,
 																	irrigation = irrigation(),
-																	region = map_outputs$region)
+																	region = map_outputs$region,
+																	max_prism_date = max_prism_date)
+				
+				print("finished checking")
 				
 				
 				if(date_check == TRUE & irrigation_check == TRUE){
@@ -237,10 +233,14 @@ location_page_server <- function(id, parent, con){
 				  
 				  updateTabItems(parent, "tabs", "initial_outputs")
 				  
+				  print("fail before")
+				  
 				  variety_coef <- variety_list %>%
 				    filter(label == input$variety) %>%
 				    select(coef) %>%
 				    as.numeric()
+				  
+				  print("fail after")
 				  
 				  withProgress(message = "Gathering current and historical season data...", value = 0, min = 0, max = 100, {
 				    
@@ -353,7 +353,7 @@ location_page_server <- function(id, parent, con){
 				
 
 
-				
+				print("stop2")
 				
 				shinyjs::runjs(autoscroll_to_anchor)
 

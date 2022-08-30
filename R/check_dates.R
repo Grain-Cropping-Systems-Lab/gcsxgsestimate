@@ -1,4 +1,4 @@
-check_dates <- function(daterange, irrigation_input, irrigation, region){
+check_dates <- function(daterange, irrigation_input, irrigation, region, max_prism_date){
 	
 	if (is.na(region)){
 		region <- "undefined"

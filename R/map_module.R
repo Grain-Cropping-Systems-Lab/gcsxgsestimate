@@ -1,5 +1,7 @@
 #' @import dplyr
 
+api_key <- golem::get_golem_options("MAPS_API_KEY")
+
 gen_nested_id <- function(id, widget_id, scope_id = '') {
 
 	if(scope_id == '')
@@ -11,7 +13,7 @@ gen_nested_id <- function(id, widget_id, scope_id = '') {
 render_map <- function(shapefile, markers){
 
 	googleway::renderGoogle_map({
-		googleway::google_map(key = Sys.getenv("MAPS_API_KEY"),
+		googleway::google_map(key = api_key,
 							 location = c(markers$lat, markers$lon),
 							 zoom = 8,
 							 search_box = TRUE,
