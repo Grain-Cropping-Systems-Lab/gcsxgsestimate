@@ -62,12 +62,15 @@ initial_outputs_gs_server <- function(id,
 																	 map_outputs,
 																	 growth_stage_option,
 																	 prelim_weather_data,
-																	 irrigation_data){
+																	 irrigation_data,
+																	 con){
 	moduleServer(
 		id,
 		function(input, output, session){
 
 			ns <- session$ns
+			
+			max_prism_date <- DBI::dbGetQuery(con, "SELECT DISTINCT(date) FROM grain.prism WHERE quality != 'forecast' ORDER BY date DESC LIMIT 1;")
 
 			observe({
 				if(nrow(req(prelim_weather_data())) > 0){
@@ -366,17 +369,20 @@ initial_outputs_gs_server <- function(id,
 																																 irrigation = irrigation(),
 																																 present_data = prelim_weather_data(),
 																																 lat = map_outputs()$lat,
-																																 long = map_outputs()$lon))
+																																 long = map_outputs()$lon,
+																																 con = con))
 
 			output$nuptake_plotly <- plotly::renderPlotly(graph_nuptake_plotly(weather_data = weather_data(),
 																																 lat = map_outputs()$lat,
 																																 long = map_outputs()$lon,
-																																 nuptake_mod = map_outputs()$nuptakemod))
+																																 nuptake_mod = map_outputs()$nuptakemod,
+																																 con = con))
 			
 			output$gdd_plotly <- plotly::renderPlotly(graph_gdd_plotly(weather_data = weather_data(),
 			                                                                   lat = map_outputs()$lat,
 			                                                                   long = map_outputs()$lon,
-			                                                                   nuptake_mod = map_outputs()$nuptakemod))
+			                                                                   nuptake_mod = map_outputs()$nuptakemod,
+			                                                           con = con))
 
 
 

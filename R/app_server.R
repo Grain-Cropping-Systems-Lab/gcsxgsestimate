@@ -43,5 +43,6 @@ app_server <- function(input, output, session) {
                                                map_outputs = location_outputs$map_outputs,
                                                growth_stage_option = location_outputs$growth_stage_option,
                                                prelim_weather_data = location_outputs$prelim_weather_data,
-                                               irrigation_data = location_outputs$irrigation)
+                                               irrigation_data = location_outputs$irrigation,
+                                               con = con)
 }

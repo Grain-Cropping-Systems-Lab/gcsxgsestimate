@@ -19,7 +19,7 @@ range is limited to one ", actionLink(ns("actionlink"), "wheat growing season"),
 									 								 								"<a href = 'https://anrcatalog.ucanr.edu/pdf/8165.pdf' target='_blank'>growth stage</a>",
 									 								 								" of the plants for the current date or if looking historically, the latest date in your chosen date range.
 										 								 								 The growth stage should be the most advanced growth stage that 50% of plants in the field have reached.")),
-									 								 		fluidRow(column(12, img(src="images/growth_stages_linear.png", class="img-responsive"))),
+									 								 		fluidRow(column(12, img(src="www/growth_stages_linear.png", class="img-responsive"))),
 									 								 		fluidRow(column(12, class = 'slider-container', shinyWidgets::noUiSliderInput(inputId = ns("growth_stage_user_input_1"), label = NULL, color = "#005fae", min = 0, max = 14, value = 0, step = 0.1))),
 									 								 		br()
 									 								 )),
@@ -154,7 +154,7 @@ location_page_server <- function(id, parent, con){
 			})
 
 			output$growingSeasonImage <- renderImage({
-				filename <- "../files/testing_tooltip.PNG"
+				filename <- "data/testing_tooltip.PNG"
 
 				# Return a list containing the filename and alt text
 				list(src = filename,
