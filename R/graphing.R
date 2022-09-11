@@ -28,7 +28,7 @@ rownames(nuptake_lines) <- nuptake_lines$var
 gdd_lines <- data.frame(
   var = c("forecast", "gdd_cumsum.historical", "gdd_cumsum.present"),
   label = c("Forecast", "Cumulative GDD (10-yr avg)", "Cumulative GDD (current season)"),
-  color = c("gold", "orangered", "orangered"),
+  color = c("gold", "mediumorchid", "mediumorchid"),
   style = c("1111", "dash", "solid"),
   alpha = c(1, .4, 1),
   check = c("check_forecast", "check_gdd_10", "check_gdd_current"),
