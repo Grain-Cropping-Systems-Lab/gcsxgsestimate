@@ -5,7 +5,7 @@ graph_gdd_plotly <- function(weather_data, lat, long, nuptake_mod, con) {
 		substr(as.character(min(weather_data[weather_data$time == "present", "date"])), 6,10), " to ",
 		substr(as.character(max(weather_data[weather_data$time == "present", "date"])), 6,10), " (", county, "; ", as.character(round(lat, 2)), ", ", as.character(round(long, 2)), ")")
 
-	named_colors <- c(gdd_cumsum.forecast = 'gold',gdd_cumsum.historical = "orangered", gdd_cumsum.present = "orangered")
+	named_colors <- c(gdd_cumsum.forecast = 'gold',gdd_cumsum.historical = "mediumorchid", gdd_cumsum.present = "mediumorchid")
 	
 	named_lines <- c(gdd_cumsum.forecast = 'solid', gdd_cumsum.historical = "dash", gdd_cumsum.present = "solid")
 	

@@ -32,8 +32,8 @@ initial_outputs_gs_ui <- function(id, label = "IO") {
 									 		fluidRow(
 									 			column(12,
 									 						 radioButtons(ns("which_plot"),"",
-									 						 						 choices = c("Cumlative GDD", "N uptake/Precip. (%)", "Seasonal Water (in.)"),
-									 						 						 selected = "Cumlative GDD", inline = TRUE)
+									 						 						 choices = c("N uptake/Precip. (%)", "Cumlative GDD", "Seasonal Water (in.)"),
+									 						 						 selected = "N uptake/Precip. (%)", inline = TRUE)
 									 			)
 									 		),
 									 		fluidRow(
