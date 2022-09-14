@@ -72,9 +72,7 @@ location_page_server <- function(id, parent, con, api_key){
 			
 			max_prism_date <- DBI::dbGetQuery(con, "SELECT DISTINCT(date) FROM grain.prism WHERE quality != 'forecast' ORDER BY date DESC LIMIT 1;")
 			
-			variety_list <- readr::read_csv("data/variety_coefs.csv")
-			
-			variety_list <-  dplyr::arrange(dplyr::filter(variety_list, is.na(name)), label) 
+			variety_list <- readr::read_csv("data/rel_gdd_crop_type.csv") 
 			
 			output$daterange <- renderUI({
 			  dateRangeInput(session$ns('daterange'), label = "", format = 'mm/dd/yyyy',
@@ -151,7 +149,7 @@ location_page_server <- function(id, parent, con, api_key){
 			})
 			
 			output$variety <- renderUI({
-			  selectInput(inputId = session$ns("variety"), label = "", choices = variety_list$label, selected = "AVERAGE COMMON")
+			  selectInput(inputId = session$ns("variety"), label = "", choices = unique(variety_list$crop_sub_type), selected = "COMMON")
 			})
 
 			output$growingSeasonImage <- renderImage({
@@ -225,10 +223,10 @@ location_page_server <- function(id, parent, con, api_key){
 				  
 				  updateTabItems(parent, "tabs", "initial_outputs")
 				  
-				  variety_coef <- variety_list %>%
-				    filter(label == input$variety) %>%
-				    select(coef) %>%
-				    as.numeric()
+#				  variety_coef <- variety_list %>%
+#				    filter(label == input$variety) %>%
+#				    select(coef) %>%
+#				    as.numeric()
 				  
 				  withProgress(message = "Gathering current and historical season data...", value = 0, min = 0, max = 100, {
 				    
@@ -275,7 +273,7 @@ location_page_server <- function(id, parent, con, api_key){
 				             gdd_cumsum = cumsum(gdd),
 				             nuptake_perc = gdd_to_nuptake(gdd_cumsum),
 				             rel_precip_cumsum = precip_cumsum/max(historical_data$precip_cumsum)*100,
-				             nuptake_perc = gdd_to_nuptake(gdd_cumsum*variety_coef)) %>%
+				             nuptake_perc = gdd_to_nuptake(gdd_cumsum*gs_correction(crop_type = input$variety, cum_gdd = gdd_cumsum, gd_rel_gdds_input = variety_list))) %>%
 				      tidyr::drop_na()
 				    
 				    shinyBS::updateButton(session, inputId = "switchtab", label = "Next", block = TRUE, style="default", size = "lg", disabled = FALSE)
@@ -289,14 +287,14 @@ location_page_server <- function(id, parent, con, api_key){
 				      present_data <- present_data %>%
 				        mutate(gdd_temp = if_else(date < first_water, 0, gdd),
 				               gdd_cumsum = cumsum(gdd_temp),
-				               nuptake_perc = gdd_to_nuptake(gdd_cumsum*variety_coef)) %>%
+				               nuptake_perc = gdd_to_nuptake(gdd_cumsum*gs_correction(crop_type = input$variety, cum_gdd = gdd_cumsum, gd_rel_gdds_input = variety_list))) %>%
 				        select(-gdd_temp)
 				      
 				      # moving the beginning of the historical N uptake to the current season's first irrigation
 				      historical_data <- historical_data %>%
 				        mutate(gdd_temp = if_else(pseudo_date < first_water, 0, gdd),
 				               gdd_cumsum = cumsum(gdd_temp),
-				               nuptake_perc = gdd_to_nuptake(gdd_cumsum*variety_coef)) %>%
+				               nuptake_perc = gdd_to_nuptake(gdd_cumsum*gs_correction(crop_type = input$variety, cum_gdd = gdd_cumsum, gd_rel_gdds_input = variety_list))) %>%
 				        select(-gdd_temp)
 				      
 				    } else{
@@ -305,14 +303,14 @@ location_page_server <- function(id, parent, con, api_key){
 				      present_data <- present_data %>%
 				        mutate(gdd_temp = if_else(date < first_ppt, 0, gdd),
 				               gdd_cumsum = cumsum(gdd_temp),
-				               nuptake_perc = gdd_to_nuptake(gdd_cumsum*variety_coef)) %>%
+				               nuptake_perc = gdd_to_nuptake(gdd_cumsum*gs_correction(crop_type = input$variety, cum_gdd = gdd_cumsum, gd_rel_gdds_input = variety_list))) %>%
 				        select(-gdd_temp)
 				      
 				      # moving the beginning of the historical N uptake to the current season's first rainfall
 				      historical_data <- historical_data %>%
 				        mutate(gdd_temp = if_else(pseudo_date < first_ppt, 0, gdd),
 				               gdd_cumsum = cumsum(gdd_temp),
-				               nuptake_perc = gdd_to_nuptake(gdd_cumsum*variety_coef)) %>%
+				               nuptake_perc = gdd_to_nuptake(gdd_cumsum*gs_correction(crop_type = input$variety, cum_gdd = gdd_cumsum, gd_rel_gdds_input = variety_list))) %>%
 				        select(-gdd_temp)
 				      
 				    }
