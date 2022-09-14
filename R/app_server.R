@@ -14,7 +14,12 @@ app_server <- function(input, output, session) {
   api_key <- golem::get_golem_options("MAPS_API_KEY")
   print(api_key)
   
-  reactiveTimer(60000)
+  timer <- reactiveTimer(10000) # time unit in milliseconds
+  
+  observe({
+    timer()
+    print("keep alive")
+  })
   
   con <- DBI::dbConnect(
       RPostgres::Postgres(),
