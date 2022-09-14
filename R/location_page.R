@@ -168,7 +168,6 @@ location_page_server <- function(id, parent, con, api_key){
 			
 			observeEvent(input$numIrr, {
 			  if(input$numIrr > 0) {
-			    print("there is irrigation")
 			    if(!is.null(input$daterange)){
 			      irrigation_memory <- memoize_irrigation(input, irrigation_memory)
 			      output$inputGroup = build_memoized_irrigation_amounts(input$numIrr, irrigation_memory, session = session)
@@ -189,10 +188,6 @@ location_page_server <- function(id, parent, con, api_key){
 																					amount = numeric()))
 
 			observeEvent(input$switchtab, {
-			  
-			  print('INITIATE SWITCH')
-			  print(variety_list)
-
 
 				if (input$irrigation == 1){
 					for (i in seq(1, input$numIrr)){
@@ -218,15 +213,11 @@ location_page_server <- function(id, parent, con, api_key){
 					showNotification("Error: Irrigation amounts out of bounds!", id = "irrigation_error")
 				}
 				
-				print("stop 1")
-
 				date_check <- check_dates(daterange = input$daterange,
 																	irrigation_input = input$irrigation,
 																	irrigation = irrigation(),
 																	region = map_outputs$region,
 																	max_prism_date = max_prism_date)
-				
-				print("finished checking")
 				
 				
 				if(date_check == TRUE & irrigation_check == TRUE){
@@ -234,14 +225,10 @@ location_page_server <- function(id, parent, con, api_key){
 				  
 				  updateTabItems(parent, "tabs", "initial_outputs")
 				  
-				  print("fail before")
-				  
 				  variety_coef <- variety_list %>%
 				    filter(label == input$variety) %>%
 				    select(coef) %>%
 				    as.numeric()
-				  
-				  print("fail after")
 				  
 				  withProgress(message = "Gathering current and historical season data...", value = 0, min = 0, max = 100, {
 				    
@@ -352,9 +339,6 @@ location_page_server <- function(id, parent, con, api_key){
 				  
 				}
 				
-
-
-				print("stop2")
 				
 				shinyjs::runjs(autoscroll_to_anchor)
 

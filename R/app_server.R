@@ -12,7 +12,6 @@ app_server <- function(input, output, session) {
   db_creds <- httr::parse_url(golem::get_golem_options("DATABASE_URL"))
 
   api_key <- golem::get_golem_options("MAPS_API_KEY")
-  print(api_key)
   
   timer <- reactiveTimer(10000) # time unit in milliseconds
   
