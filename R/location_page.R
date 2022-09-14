@@ -57,7 +57,7 @@ range is limited to one ", actionLink(ns("actionlink"), "wheat growing season"),
 	)
 }
 
-location_page_server <- function(id, parent, con){
+location_page_server <- function(id, parent, con, api_key){
 	moduleServer(
 		id,
 		function(input, output, session){
@@ -99,6 +99,7 @@ location_page_server <- function(id, parent, con){
 			
 			
 			map_outputs <- map_mod_server("map_mod",
+			                              api_key = api_key,
 																		shapefile_path = "inst/extdata/ca_wheat_regions.shp",
 																		region_behavior = region_behavior_nmanagement,
 																		default_lat = 38.533867,

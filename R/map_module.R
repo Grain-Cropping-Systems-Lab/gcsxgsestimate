@@ -1,7 +1,5 @@
 #' @import dplyr
 
-api_key <- golem::get_golem_options("MAPS_API_KEY")
-
 gen_nested_id <- function(id, widget_id, scope_id = '') {
 
 	if(scope_id == '')
@@ -10,7 +8,7 @@ gen_nested_id <- function(id, widget_id, scope_id = '') {
   return(paste(scope_id, id, widget_id, sep = "-"))
 }
 
-render_map <- function(shapefile, markers){
+render_map <- function(shapefile, markers, api_key){
 
 	googleway::renderGoogle_map({
 		googleway::google_map(key = api_key,
@@ -74,7 +72,7 @@ map_mod_ui <- function(id){
 	googleway::google_mapOutput(ns("map")) %>% shinycssloaders::withSpinner(type = 6, color="#005fae")
 }
 
-map_mod_server <- function(id, shapefile_path, region_behavior, default_lat, default_lon, scope_id = "") {
+map_mod_server <- function(id, api_key, shapefile_path, region_behavior, default_lat, default_lon, scope_id = "") {
 	moduleServer(
 		id,
 		function(input, output, session){
@@ -85,7 +83,8 @@ map_mod_server <- function(id, shapefile_path, region_behavior, default_lat, def
 				mutate(fill_color = if_else(!is.na(region), "#1C00ff00", "#A9A9A9"))
 
 
-			output$map <- render_map(shapefile = shapefile,
+			output$map <- render_map(api_key = api_key, 
+			                         shapefile = shapefile,
 															 markers = data.frame(lat = default_lat, lon = default_lon))
 
 			current_markers <- reactiveValues(
