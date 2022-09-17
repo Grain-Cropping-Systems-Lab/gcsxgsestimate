@@ -42,7 +42,7 @@ range is limited to one ", actionLink(ns("actionlink"), "wheat growing season"),
 									 										 								pips = list(mode = 'values',
 									 										 														values = 1:12, format = shinyWidgets::wNumbFormat(decimals = 0)),
 									 										 								format = shinyWidgets::wNumbFormat(decimals = 0))),
-									 		conditionalPanel(condition = "(input.irrigation == 1) & (input.numIrr > 0)", ns = ns,
+									 		conditionalPanel(condition = "input.irrigation == 1", ns = ns,
 									 										 column(6, uiOutput(ns("dateGroup"))),
 									 										 column(6, uiOutput(ns("inputGroup")))
 									 		),
@@ -164,7 +164,7 @@ location_page_server <- function(id, parent, con, api_key){
 
 			irrigation_memory <- clear_irrigation_memory()
 			
-			observeEvent(input$numIrr, {
+			observeEvent(input$irrigation | input$numIrr, {
 			  if(input$numIrr > 0) {
 			    if(!is.null(input$daterange)){
 			      irrigation_memory <- memoize_irrigation(input, irrigation_memory)

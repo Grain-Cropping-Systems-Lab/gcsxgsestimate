@@ -11,10 +11,6 @@ clear_irrigation_memory <- function() {
 memoize_irrigation <- function(input, memory) {
 
 	irrigation_memory <- memory
-	
-	print(irrigation_memory)
-	print(input$numIrr)
-	print(input$daterange[1])
 
 	# only rebuild memory if we are increasing the number of slots
 	if(req(input$numIrr) > nrow(irrigation_memory)) {
