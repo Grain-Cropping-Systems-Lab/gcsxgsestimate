@@ -13,11 +13,23 @@ app_server <- function(input, output, session) {
 
   api_key <- golem::get_golem_options("MAPS_API_KEY")
   
-  timer <- reactiveTimer(10000) # time unit in milliseconds
+  start_time <- reactiveValues(time = Sys.time())
   
   observe({
-    timer()
-    print("keep alive")
+    # Re-execute this reactive expression after 50000 milliseconds
+    invalidateLater(50000)
+    
+    if((Sys.time() - start_time$time) < 120){
+      print(Sys.time() - start_time$time)
+      print("keep alive") 
+    } else {
+      stopApp()
+    }
+  })
+  
+  observeEvent(reactiveValuesToList(input), ignoreInit = TRUE,{
+    start_time$time <- Sys.time()
+    print("reset timer")
   })
   
   con <- DBI::dbConnect(
