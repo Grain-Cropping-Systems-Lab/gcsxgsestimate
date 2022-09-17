@@ -459,7 +459,7 @@ initial_outputs_gs_server <- function(id,
 																						 				 data_type = if_else(quality == "prism", "current", quality),
 																						 				 amount = if_else(measurement == "ppt", amount/25.4, amount)) %>%
 																						 	select(-measurement, - time, -quality, -data_type) %>%
-																						 	spread(key = key, value = amount),
+																						 	tidyr::spread(key = key, value = amount),
 																						 file, row.names = FALSE) }
 			)
 

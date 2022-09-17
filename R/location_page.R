@@ -272,29 +272,32 @@ location_page_server <- function(id, parent, con, api_key){
 				      mutate(precip_cumsum = cumsum(ppt),
 				             gdd_cumsum = cumsum(gdd),
 				             nuptake_perc = gdd_to_nuptake(gdd_cumsum),
-				             rel_precip_cumsum = precip_cumsum/max(historical_data$precip_cumsum)*100,
-				             nuptake_perc = gdd_to_nuptake(gdd_cumsum*gs_correction(crop_type = input$variety, cum_gdd = gdd_cumsum, gd_rel_gdds_input = variety_list))) %>%
+				             rel_precip_cumsum = precip_cumsum/max(historical_data$precip_cumsum)*100) %>% 
+				      rowwise() %>% 
+				      mutate(nuptake_perc = gdd_to_nuptake(gdd_cumsum*gs_correction(crop_type = input$variety, cum_gdd = gdd_cumsum, gd_rel_gdds_input = variety_list))) %>%
 				      tidyr::drop_na()
 				    
 				    shinyBS::updateButton(session, inputId = "switchtab", label = "Next", block = TRUE, style="default", size = "lg", disabled = FALSE)
 				  }) # end of progress bar tracking
 				  
+				  
 				  if (input$moisture == 0) {
 				    if(input$irrigation == 1){
-				      #print(names(irrigation()))
+				      
 				      first_water <- min(c(min(irrigation()[irrigation()$amount > 0, "date"]), min(present_data[present_data$ppt > 0, "date"])))
-				      #print(paste0("first water: ", first_water))
 				      present_data <- present_data %>%
 				        mutate(gdd_temp = if_else(date < first_water, 0, gdd),
-				               gdd_cumsum = cumsum(gdd_temp),
-				               nuptake_perc = gdd_to_nuptake(gdd_cumsum*gs_correction(crop_type = input$variety, cum_gdd = gdd_cumsum, gd_rel_gdds_input = variety_list))) %>%
+				               gdd_cumsum = cumsum(gdd_temp)) %>% 
+				        rowwise() %>% 
+				        mutate(nuptake_perc = gdd_to_nuptake(gdd_cumsum*gs_correction(crop_type = input$variety, cum_gdd = gdd_cumsum, gd_rel_gdds_input = variety_list))) %>%
 				        select(-gdd_temp)
 				      
 				      # moving the beginning of the historical N uptake to the current season's first irrigation
 				      historical_data <- historical_data %>%
 				        mutate(gdd_temp = if_else(pseudo_date < first_water, 0, gdd),
-				               gdd_cumsum = cumsum(gdd_temp),
-				               nuptake_perc = gdd_to_nuptake(gdd_cumsum*gs_correction(crop_type = input$variety, cum_gdd = gdd_cumsum, gd_rel_gdds_input = variety_list))) %>%
+				               gdd_cumsum = cumsum(gdd_temp)) %>% 
+				        rowwise() %>% 
+				        mutate(nuptake_perc = gdd_to_nuptake(gdd_cumsum*gs_correction(crop_type = input$variety, cum_gdd = gdd_cumsum, gd_rel_gdds_input = variety_list))) %>%
 				        select(-gdd_temp)
 				      
 				    } else{
@@ -302,15 +305,17 @@ location_page_server <- function(id, parent, con, api_key){
 				      first_ppt <- min(present_data[present_data$ppt > 0, "date"], na.rm = TRUE)
 				      present_data <- present_data %>%
 				        mutate(gdd_temp = if_else(date < first_ppt, 0, gdd),
-				               gdd_cumsum = cumsum(gdd_temp),
-				               nuptake_perc = gdd_to_nuptake(gdd_cumsum*gs_correction(crop_type = input$variety, cum_gdd = gdd_cumsum, gd_rel_gdds_input = variety_list))) %>%
+				               gdd_cumsum = cumsum(gdd_temp)) %>% 
+				        rowwise() %>% 
+				        mutate(nuptake_perc = gdd_to_nuptake(gdd_cumsum*gs_correction(crop_type = input$variety, cum_gdd = gdd_cumsum, gd_rel_gdds_input = variety_list))) %>%
 				        select(-gdd_temp)
 				      
 				      # moving the beginning of the historical N uptake to the current season's first rainfall
 				      historical_data <- historical_data %>%
 				        mutate(gdd_temp = if_else(pseudo_date < first_ppt, 0, gdd),
-				               gdd_cumsum = cumsum(gdd_temp),
-				               nuptake_perc = gdd_to_nuptake(gdd_cumsum*gs_correction(crop_type = input$variety, cum_gdd = gdd_cumsum, gd_rel_gdds_input = variety_list))) %>%
+				               gdd_cumsum = cumsum(gdd_temp)) %>% 
+				        rowwise() %>% 
+				        mutate(nuptake_perc = gdd_to_nuptake(gdd_cumsum*gs_correction(crop_type = input$variety, cum_gdd = gdd_cumsum, gd_rel_gdds_input = variety_list))) %>%
 				        select(-gdd_temp)
 				      
 				    }
