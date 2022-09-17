@@ -219,14 +219,10 @@ location_page_server <- function(id, parent, con, api_key){
 				
 				
 				if(date_check == TRUE & irrigation_check == TRUE){
+				  
 				  shinyBS::updateButton(parent, inputId = "switchtab", label = "Next", block = TRUE, style="default", size = "lg", disabled = TRUE)
 				  
 				  updateTabItems(parent, "tabs", "initial_outputs")
-				  
-#				  variety_coef <- variety_list %>%
-#				    filter(label == input$variety) %>%
-#				    select(coef) %>%
-#				    as.numeric()
 				  
 				  withProgress(message = "Gathering current and historical season data...", value = 0, min = 0, max = 100, {
 				    
@@ -284,7 +280,8 @@ location_page_server <- function(id, parent, con, api_key){
 				  if (input$moisture == 0) {
 				    if(input$irrigation == 1){
 				      
-				      first_water <- min(c(min(irrigation()[irrigation()$amount > 0, "date"]), min(present_data[present_data$ppt > 0, "date"])))
+				      first_water <- min(c(min(irrigation()[irrigation()$amount > 0, "date"]),
+				                           min(as.data.frame(present_data)[as.data.frame(present_data)$ppt > 0, "date"])))
 				      present_data <- present_data %>%
 				        mutate(gdd_temp = if_else(date < first_water, 0, gdd),
 				               gdd_cumsum = cumsum(gdd_temp)) %>% 
@@ -302,7 +299,12 @@ location_page_server <- function(id, parent, con, api_key){
 				      
 				    } else{
 				      
-				      first_ppt <- min(present_data[present_data$ppt > 0, "date"], na.rm = TRUE)
+				      first_ppt <- present_data %>% 
+				        filter(ppt > 0) %>% 
+				        tidyr::drop_na() %>% 
+				        pull(date) %>% 
+				        min()
+				      
 				      present_data <- present_data %>%
 				        mutate(gdd_temp = if_else(date < first_ppt, 0, gdd),
 				               gdd_cumsum = cumsum(gdd_temp)) %>% 
