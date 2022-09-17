@@ -1,4 +1,4 @@
-total_water_plot <- function(weather_data, total_water, irrigation, present_data, lat, long, ranges, lines){
+total_water_plot <- function(weather_data, total_water, irrigation, present_data, lat, long, ranges, lines, con){
 
 		irrigation <- irrigation %>%
 			mutate(date = as.Date(date),

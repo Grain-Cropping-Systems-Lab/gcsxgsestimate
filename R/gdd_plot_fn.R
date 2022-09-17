@@ -1,25 +1,28 @@
-graph_nuptake_plotly <- function(weather_data, lat, long, nuptake_mod, con) {
+graph_gdd_plotly <- function(weather_data, lat, long, nuptake_mod, con) {
 
 	county <- DBI::dbGetQuery(con, paste0("SELECT namelsad FROM grain.ca_counties WHERE ST_Contains(geom, ST_GeomFromText('POINT(", long, " ", lat, ")',4326));"))$namelsad
 	plot_title <- paste0(c(""),
 		substr(as.character(min(weather_data[weather_data$time == "present", "date"])), 6,10), " to ",
 		substr(as.character(max(weather_data[weather_data$time == "present", "date"])), 6,10), " (", county, "; ", as.character(round(lat, 2)), ", ", as.character(round(long, 2)), ")")
 
-	named_colors <- c(nuptake_perc.forecast = 'gold', rel_precip_cumsum.forecast = "gold",nuptake_perc.historical = "orangered", nuptake_perc.present = "orangered", rel_precip_cumsum.historical = "dodgerblue", rel_precip_cumsum.present = "dodgerblue")
-	named_lines <- c(nuptake_perc.forecast = 'solid', rel_precip_cumsum.forecast = "solid",nuptake_perc.historical = "dash", nuptake_perc.present = "solid", rel_precip_cumsum.historical = "dash", rel_precip_cumsum.present = "solid")
-	named_labels <- c(nuptake_perc.forecast = 'N uptake Forecast', rel_precip_cumsum.forecast = "Precipitation Forecast", nuptake_perc.historical = "N uptake (10-yr avg)", nuptake_perc.present = "N uptake (current season)", rel_precip_cumsum.historical = "Precipitation (10-yr avg)", rel_precip_cumsum.present = "Precipitation (current season)")
-	named_titles <- c(nuptake_perc.forecast = '% of total N uptake: ', rel_precip_cumsum.forecast = "% of total precipitation: ", nuptake_perc.historical = "% of total N uptake: ", nuptake_perc.present = "% of total N uptake: ", rel_precip_cumsum.historical = "% of total precipitation: ", rel_precip_cumsum.present = "% of total precipitation: ")
-	visibility <- c(nuptake_perc.forecast = T, rel_precip_cumsum.forecast = T, nuptake_perc.historical = F, nuptake_perc.present = T, rel_precip_cumsum.historical = F, rel_precip_cumsum.present = T)
+	named_colors <- c(gdd_cumsum.forecast = 'gold',gdd_cumsum.historical = "mediumorchid", gdd_cumsum.present = "mediumorchid")
+	
+	named_lines <- c(gdd_cumsum.forecast = 'solid', gdd_cumsum.historical = "dash", gdd_cumsum.present = "solid")
+	
+	named_labels <- c(gdd_cumsum.forecast = 'Cumulative GDD Forecast', gdd_cumsum.historical = "Cumulative GDD (10-yr avg)", gdd_cumsum.present = "Cumulative GDD (current season)")
+	
+	named_titles <- c(gdd_cumsum.forecast = 'Cumulative GDD: ', gdd_cumsum.historical = "Cumulative GDD: ", gdd_cumsum.present = "Cumulative GDD: ")
+	
+	visibility <- c(gdd_cumsum.forecast = T, gdd_cumsum.historical = F, gdd_cumsum.present = T)
 
 	# only care about certain measurements
 	weather_data <- weather_data %>%
 		filter(measurement %in%
-			unlist(lapply(strsplit(nuptake_lines$var, "\\."), function(x) { x[1]}))
+			unlist(lapply(strsplit(gdd_lines$var, "\\."), function(x) { x[1]}))
 		)
 
 	fig <- plotly::plot_ly(colors = named_colors, linetypes = named_lines)
 
-	if(nuptake_mod == TRUE) {
 		data <- weather_data %>% filter(quality != 'forecast') %>%
 					mutate(plot_group = interaction(measurement, time))
 
@@ -46,13 +49,13 @@ graph_nuptake_plotly <- function(weather_data, lat, long, nuptake_mod, con) {
 			}
 
 		# same for the nuptake forecast
-		if(data %>% filter(plot_group == 'nuptake_perc.forecast') %>% nrow() > 0) {
+		if(data %>% filter(plot_group == 'gdd_cumsum.forecast') %>% nrow() > 0) {
 			data <- rbind(data,
 								weather_data %>%
-								filter(measurement == 'nuptake_perc', time == 'present', quality == 'forecast') %>%
+								filter(measurement == 'gdd_cumsum', time == 'present', quality == 'forecast') %>%
 								arrange(date) %>%
 								head(1) %>%
-								mutate(quality = 'forecast', plot_group = 'nuptake_perc.present')
+								mutate(quality = 'forecast', plot_group = 'gdd_cumsum.present')
 							)
 
 				data <- data %>% arrange(date)
@@ -60,16 +63,11 @@ graph_nuptake_plotly <- function(weather_data, lat, long, nuptake_mod, con) {
 
 
 		# }
-	} else {
-			data <- weather_data %>%
-				filter(measurement == "rel_precip_cumsum" | measurement == "nuptake_perc") %>%
-				mutate(plot_group = interaction(measurement, time)) %>%
-				filter(plot_group != "nuptake_perc.historical")
-	}
+	
 
 	# turn on historical nuptake % if present is less than 5%
 	if(data %>%
-			filter(plot_group == 'nuptake_perc.present') %>%
+			filter(plot_group == 'gdd_cumsum.present') %>%
 			select(amount) %>%
 			max() < 5 |
 
@@ -80,7 +78,7 @@ graph_nuptake_plotly <- function(weather_data, lat, long, nuptake_mod, con) {
 
 		) {
 
-		visibility$nuptake_perc.historical = T
+		visibility$gdd_cumsum.historical = T
 		visibility$rel_precip_cumsum.historical = T
 	}
 
@@ -101,7 +99,7 @@ graph_nuptake_plotly <- function(weather_data, lat, long, nuptake_mod, con) {
 			type = 'scatter',
 			mode = 'lines',
 			hoverinfo = 'text',
-			text = ~paste0(label, "<br>", "Date: ", date, "<br>", title, round(amount, 1), "%")
+			text = ~paste0(label, "<br>", "Date: ", date, "<br>", title, round(amount, 1), " GDD")
 		)
 
 		fig <- fig %>%
@@ -124,7 +122,7 @@ graph_nuptake_plotly <- function(weather_data, lat, long, nuptake_mod, con) {
 
 	fig <- fig %>% plotly::layout(title = plot_title, font = list(size = 11),
 												xaxis = list(title = F, tickfont = tick_font, titlefont = title_font),
-												yaxis = list(range = range(data$amount) * c(1, 1.15), title = "% of Total", tickfont = tick_font, titlefont = title_font),
+												yaxis = list(range = range(data$amount) * c(1, 1.15), title = "Cumulative GDD", tickfont = tick_font, titlefont = title_font),
 												margin = list(l = 50, r = 50, b = 0, t = 25),
 												showlegend = T, legend = list(orientation = 'h', y = -0.25))
 	return(fig)

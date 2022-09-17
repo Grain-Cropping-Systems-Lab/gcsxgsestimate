@@ -17,7 +17,7 @@ memoize_irrigation <- function(input, memory) {
 		# nuke existing data
 		irrigation_memory <- clear_irrigation_memory()
 
-		# save key:val to memoization df
+		# save key:val to memorization df
 		lapply(1:input$numIrr, function(i) {
 			inputName <- paste("Irrigation", i, sep = "")
 			dateName <- paste("Date", i, sep = "")

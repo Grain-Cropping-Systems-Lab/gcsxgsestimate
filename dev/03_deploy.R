@@ -17,9 +17,15 @@
 ## Check the package before sending to prod
 devtools::check()
 
+# build check
+devtools::build(path = "")
+
+gcsxgsestimate::run_app(DATABASE_URL = "",
+                        MAPS_API_KEY = "")
+
 # Deploy
 
 ## Docker ----
-## If you want to deploy via a generic Dockerfile
+golem::add_dockerfile_heroku()
 golem::add_dockerfile_with_renv_heroku(output_dir = "deploy")
 

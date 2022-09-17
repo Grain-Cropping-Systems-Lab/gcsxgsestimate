@@ -15,6 +15,10 @@ initial_outputs_gs_ui <- function(id, label = "IO") {
 									 		),
 									 		fluidRow(
 									 			column(12,
+									 			       conditionalPanel(
+									 			         condition = "input.which_plot == 'Cumlative GDD'", ns = ns,
+									 			         plotly::plotlyOutput(ns("gdd_plotly")) %>% shinycssloaders::withSpinner(type = 6, color="#005fae")
+									 			       ),
 									 						 conditionalPanel(
 									 						 	condition = "input.which_plot == 'N uptake/Precip. (%)'", ns = ns,
 									 						 	plotly::plotlyOutput(ns("nuptake_plotly")) %>% shinycssloaders::withSpinner(type = 6, color="#005fae")
@@ -28,7 +32,7 @@ initial_outputs_gs_ui <- function(id, label = "IO") {
 									 		fluidRow(
 									 			column(12,
 									 						 radioButtons(ns("which_plot"),"",
-									 						 						 choices = c("N uptake/Precip. (%)", "Seasonal Water (in.)"),
+									 						 						 choices = c("N uptake/Precip. (%)", "Cumlative GDD", "Seasonal Water (in.)"),
 									 						 						 selected = "N uptake/Precip. (%)", inline = TRUE)
 									 			)
 									 		),
@@ -58,12 +62,15 @@ initial_outputs_gs_server <- function(id,
 																	 map_outputs,
 																	 growth_stage_option,
 																	 prelim_weather_data,
-																	 irrigation_data){
+																	 irrigation_data,
+																	 con){
 	moduleServer(
 		id,
 		function(input, output, session){
 
 			ns <- session$ns
+			
+			max_prism_date <- DBI::dbGetQuery(con, "SELECT DISTINCT(date) FROM grain.prism WHERE quality != 'forecast' ORDER BY date DESC LIMIT 1;")
 
 			observe({
 				if(nrow(req(prelim_weather_data())) > 0){
@@ -362,12 +369,20 @@ initial_outputs_gs_server <- function(id,
 																																 irrigation = irrigation(),
 																																 present_data = prelim_weather_data(),
 																																 lat = map_outputs()$lat,
-																																 long = map_outputs()$lon))
+																																 long = map_outputs()$lon,
+																																 con = con))
 
 			output$nuptake_plotly <- plotly::renderPlotly(graph_nuptake_plotly(weather_data = weather_data(),
 																																 lat = map_outputs()$lat,
 																																 long = map_outputs()$lon,
-																																 nuptake_mod = map_outputs()$nuptakemod))
+																																 nuptake_mod = map_outputs()$nuptakemod,
+																																 con = con))
+			
+			output$gdd_plotly <- plotly::renderPlotly(graph_gdd_plotly(weather_data = weather_data(),
+			                                                                   lat = map_outputs()$lat,
+			                                                                   long = map_outputs()$lon,
+			                                                                   nuptake_mod = map_outputs()$nuptakemod,
+			                                                           con = con))
 
 
 
@@ -444,7 +459,7 @@ initial_outputs_gs_server <- function(id,
 																						 				 data_type = if_else(quality == "prism", "current", quality),
 																						 				 amount = if_else(measurement == "ppt", amount/25.4, amount)) %>%
 																						 	select(-measurement, - time, -quality, -data_type) %>%
-																						 	spread(key = key, value = amount),
+																						 	tidyr::spread(key = key, value = amount),
 																						 file, row.names = FALSE) }
 			)
 
