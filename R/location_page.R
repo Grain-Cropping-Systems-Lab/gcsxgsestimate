@@ -268,9 +268,21 @@ location_page_server <- function(id, parent, con, api_key){
 				      mutate(precip_cumsum = cumsum(ppt),
 				             gdd_cumsum = cumsum(gdd),
 				             nuptake_perc = gdd_to_nuptake(gdd_cumsum),
-				             rel_precip_cumsum = precip_cumsum/max(historical_data$precip_cumsum)*100) %>% 
-				      rowwise() %>% 
-				      mutate(nuptake_perc = gdd_to_nuptake(gdd_cumsum*gs_correction(crop_type = input$variety, cum_gdd = gdd_cumsum, gd_rel_gdds_input = variety_list))) %>%
+				             rel_precip_cumsum = precip_cumsum/max(historical_data$precip_cumsum)*100) #%>% 
+				      #rowwise() %>% 
+				    
+				    
+				    lowset <- present_data[present_data$gdd_cumsum <= 1125,]
+				    variableset <-present_data[present_data$gdd_cumsum > 1125,]
+				    
+				    lowset$correction <- (variety_list %>% 
+				                            filter(group == 1000) %>% 
+				                            filter(crop_sub_type == input$variety))$relative_gs
+				    
+				    variableset$correction <- apply(as.matrix(variableset$gdd_cumsum), 1, FUN = gs_correction, crop_type = input$variety, gd_rel_gdds_input = variety_list)
+				    
+				    present_data <- bind_rows(lowset, variableset) %>% 
+				      mutate(nuptake_perc = gdd_to_nuptake(gdd_cumsum*correction)) %>%
 				      tidyr::drop_na()
 				    
 				    shinyBS::updateButton(session, inputId = "switchtab", label = "Next", block = TRUE, style="default", size = "lg", disabled = FALSE)
@@ -284,17 +296,41 @@ location_page_server <- function(id, parent, con, api_key){
 				                           min(as.data.frame(present_data)[as.data.frame(present_data)$ppt > 0, "date"])))
 				      present_data <- present_data %>%
 				        mutate(gdd_temp = if_else(date < first_water, 0, gdd),
-				               gdd_cumsum = cumsum(gdd_temp)) %>% 
-				        rowwise() %>% 
-				        mutate(nuptake_perc = gdd_to_nuptake(gdd_cumsum*gs_correction(crop_type = input$variety, cum_gdd = gdd_cumsum, gd_rel_gdds_input = variety_list))) %>%
+				               gdd_cumsum = cumsum(gdd_temp))# %>% 
+				        #rowwise() %>% 
+				      
+				      
+				      lowset <- present_data[present_data$gdd_cumsum <= 1125,]
+				      variableset <-present_data[present_data$gdd_cumsum > 1125,]
+				      
+				      lowset$correction <- (variety_list %>% 
+				                              filter(group == 1000) %>% 
+				                              filter(crop_sub_type == input$variety))$relative_gs
+				      
+				      variableset$correction <- apply(as.matrix(variableset$gdd_cumsum), 1, FUN = gs_correction, crop_type = input$variety, gd_rel_gdds_input = variety_list)
+				      
+				      present_data <- bind_rows(lowset, variableset) %>% 
+				        mutate(nuptake_perc = gdd_to_nuptake(gdd_cumsum*correction)) %>%
 				        select(-gdd_temp)
 				      
 				      # moving the beginning of the historical N uptake to the current season's first irrigation
 				      historical_data <- historical_data %>%
 				        mutate(gdd_temp = if_else(pseudo_date < first_water, 0, gdd),
-				               gdd_cumsum = cumsum(gdd_temp)) %>% 
-				        rowwise() %>% 
-				        mutate(nuptake_perc = gdd_to_nuptake(gdd_cumsum*gs_correction(crop_type = input$variety, cum_gdd = gdd_cumsum, gd_rel_gdds_input = variety_list))) %>%
+				               gdd_cumsum = cumsum(gdd_temp)) #%>% 
+				        #rowwise() %>% 
+				      
+				      
+				      lowset <- present_data[present_data$gdd_cumsum <= 1125,]
+				      variableset <-present_data[present_data$gdd_cumsum > 1125,]
+				      
+				      lowset$correction <- (variety_list %>% 
+				                              filter(group == 1000) %>% 
+				                              filter(crop_sub_type == input$variety))$relative_gs
+				      
+				      variableset$correction <- apply(as.matrix(variableset$gdd_cumsum), 1, FUN = gs_correction, crop_type = input$variety, gd_rel_gdds_input = variety_list)
+				      
+				      present_data <- bind_rows(lowset, variableset) %>% 
+				        mutate(nuptake_perc = gdd_to_nuptake(gdd_cumsum*correction)) %>%
 				        select(-gdd_temp)
 				      
 				    } else{
@@ -307,17 +343,43 @@ location_page_server <- function(id, parent, con, api_key){
 				      
 				      present_data <- present_data %>%
 				        mutate(gdd_temp = if_else(date < first_ppt, 0, gdd),
-				               gdd_cumsum = cumsum(gdd_temp)) %>% 
-				        rowwise() %>% 
-				        mutate(nuptake_perc = gdd_to_nuptake(gdd_cumsum*gs_correction(crop_type = input$variety, cum_gdd = gdd_cumsum, gd_rel_gdds_input = variety_list))) %>%
+				               gdd_cumsum = cumsum(gdd_temp))# %>% 
+				        #rowwise() %>% 
+				      
+				      
+				      lowset <- present_data[present_data$gdd_cumsum <= 1125,]
+				      variableset <-present_data[present_data$gdd_cumsum > 1125,]
+				      
+				      lowset$correction <- (variety_list %>% 
+				                              filter(group == 1000) %>% 
+				                              filter(crop_sub_type == input$variety))$relative_gs
+				      
+				      variableset$correction <- apply(as.matrix(variableset$gdd_cumsum), 1, FUN = gs_correction, crop_type = input$variety, gd_rel_gdds_input = variety_list)
+				      
+				      present_data <- bind_rows(lowset, variableset) %>% 
+				        mutate(nuptake_perc = gdd_to_nuptake(gdd_cumsum*correction)) %>%
+				        tidyr::drop_na() %>% 
 				        select(-gdd_temp)
 				      
 				      # moving the beginning of the historical N uptake to the current season's first rainfall
 				      historical_data <- historical_data %>%
 				        mutate(gdd_temp = if_else(pseudo_date < first_ppt, 0, gdd),
-				               gdd_cumsum = cumsum(gdd_temp)) %>% 
-				        rowwise() %>% 
-				        mutate(nuptake_perc = gdd_to_nuptake(gdd_cumsum*gs_correction(crop_type = input$variety, cum_gdd = gdd_cumsum, gd_rel_gdds_input = variety_list))) %>%
+				               gdd_cumsum = cumsum(gdd_temp))# %>% 
+				        #rowwise() %>% 
+				      
+				      
+				      lowset <- present_data[present_data$gdd_cumsum <= 1125,]
+				      variableset <-present_data[present_data$gdd_cumsum > 1125,]
+				      
+				      lowset$correction <- (variety_list %>% 
+				                              filter(group == 1000) %>% 
+				                              filter(crop_sub_type == input$variety))$relative_gs
+				      
+				      variableset$correction <- apply(as.matrix(variableset$gdd_cumsum), 1, FUN = gs_correction, crop_type = input$variety, gd_rel_gdds_input = variety_list)
+				      
+				      present_data <- bind_rows(lowset, variableset) %>% 
+				        mutate(nuptake_perc = gdd_to_nuptake(gdd_cumsum*correction)) %>%
+				        tidyr::drop_na() %>% 
 				        select(-gdd_temp)
 				      
 				    }
