@@ -1,6 +1,6 @@
 dashboard_header_ui <- function(id, label = "header") {
 	ns <- NS(id)
-	shinydashboard::dashboardHeader(title = "Growth Stage, N Use, and Seasonal Water Estimation Tool for California Wheat (Beta)", titleWidth = 700,
+	shinydashboard::dashboardHeader(title = "Growth Stage, N Use, and Seasonal Water Estimation Tool for California Wheat (Beta)", titleWidth = 900,
 									tags$li(actionLink("comments",
 																		 label = "",
 																		 icon = icon("comments"),

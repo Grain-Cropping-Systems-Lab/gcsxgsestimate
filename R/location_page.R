@@ -310,8 +310,8 @@ location_page_server <- function(id, parent, con, api_key){
 				      variableset$correction <- apply(as.matrix(variableset$gdd_cumsum), 1, FUN = gs_correction, crop_type = input$variety, gd_rel_gdds_input = variety_list)
 				      
 				      present_data <- bind_rows(lowset, variableset) %>% 
-				        mutate(nuptake_perc = gdd_to_nuptake(gdd_cumsum*correction)) %>%
-				        select(-gdd_temp)
+				        mutate(nuptake_perc = gdd_to_nuptake(gdd_cumsum*correction)) #%>%
+				        #select(-gdd_temp)
 				      
 				      # moving the beginning of the historical N uptake to the current season's first irrigation
 				      historical_data <- historical_data %>%
@@ -358,8 +358,8 @@ location_page_server <- function(id, parent, con, api_key){
 				      
 				      present_data <- bind_rows(lowset, variableset) %>% 
 				        mutate(nuptake_perc = gdd_to_nuptake(gdd_cumsum*correction)) %>%
-				        tidyr::drop_na() %>% 
-				        select(-gdd_temp)
+				        tidyr::drop_na() #%>% 
+				        #select(-gdd_temp)
 				      
 				      # moving the beginning of the historical N uptake to the current season's first rainfall
 				      historical_data <- historical_data %>%
