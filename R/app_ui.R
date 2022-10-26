@@ -26,7 +26,7 @@ app_ui <- function(request) {
         waiter::use_waiter(), # include dependencies
         waiter::waiter_show_on_load(html = waiter::spin_loaders(8, color = '#005fae', style="width: 200px;
     height:200px;"),color = waiter::transparent(.5)),
-        shinyjs::extendShinyjs("inst/app/www/app-shinyjs.js", functions = c("updateHistory")),
+        shinyjs::extendShinyjs("www/app-shinyjs.js", functions = c("updateHistory")),
         tags$head(
           tags$style("#shiny-modal img { max-width: 100%; }"),
           tags$link(rel = "stylesheet", type = "text/css", href = "css/slider.css"),

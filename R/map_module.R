@@ -33,7 +33,7 @@ render_map <- function(shapefile, markers, api_key){
 update_map <- function(markers, map_id, type){
 
 	if (type == "geolocation"){
-
+	 
 		googleway::google_map_update(map_id = map_id) %>%
 			googleway::clear_markers() %>%
 			googleway::add_markers(data = data.frame(lat = markers$lat, lon = markers$lon),
@@ -89,6 +89,16 @@ map_mod_server <- function(id, api_key, shapefile_path, region_behavior, default
 
 			current_markers <- reactiveValues(
 				lat=default_lat, lon=default_lon)
+			
+			rd <- region_data(shapefile = shapefile,
+			                  markers = data.frame(lat = default_lat,
+			                                       lon = default_lon))
+			
+			current_markers <- region_behavior(shapefile = shapefile,
+			                                   region_data = rd,
+			                                   current_markers = current_markers,
+			                                   testing_markers = data.frame(lat = default_lat,
+			                                                                lon = default_lon))
 
 			observeEvent(input$map_marker_drag, {
 
@@ -139,6 +149,7 @@ map_mod_server <- function(id, api_key, shapefile_path, region_behavior, default
 			})
 
 			observeEvent(input$map_geolocation,{
+			  
 
 				rd <- region_data(shapefile = shapefile,
 													markers = data.frame(lat = current_markers$lat,
@@ -152,19 +163,20 @@ map_mod_server <- function(id, api_key, shapefile_path, region_behavior, default
 
 				if(is.null(input$map_geolocation$lat) | is.null(input$map_geolocation$lon)){
 
-					rd <- region_data(shapefile = shapefile,
-														markers = data.frame(lat = current_markers$lat,
-																								 lon = current_markers$lon))
 
-					current_markers <- region_behavior(shapefile = shapefile,
-																						 region_data = rd,
-																						 current_markers = current_markers,
-																						 testing_markers = data.frame(lat = current_markers$lat,
-																						 														 lon = current_markers$lon))
+	#				rd <- region_data(shapefile = shapefile,
+	#													markers = data.frame(lat = current_markers$lat,
+	#																							 lon = current_markers$lon))
 
-					update_map(markers = current_markers,
-										 map_id = gen_nested_id(id, "map", scope_id),
-										 type = "geolocation")
+	#				current_markers <- region_behavior(shapefile = shapefile,
+	#																					 region_data = rd,
+	#																					 current_markers = current_markers,
+	#																					 testing_markers = data.frame(lat = current_markers$lat,
+	#																					 														 lon = current_markers$lon))
+
+	#				update_map(markers = current_markers,
+	#									 map_id = gen_nested_id(id, "map", scope_id),
+	#									 type = "geolocation")
 
 				} else {
 
@@ -196,6 +208,7 @@ map_mod_server <- function(id, api_key, shapefile_path, region_behavior, default
 				rd <- region_data(shapefile = shapefile,
 													markers = data.frame(lat = input$map_place_search$lat,
 																							 lon = input$map_place_search$lon))
+				
 
 				if(nrow(rd) == 0){
 					showNotification("Error: no data for this location - moving point to default location!", id = "region_error")

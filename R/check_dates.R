@@ -19,20 +19,16 @@ check_dates <- function(daterange, irrigation_input, irrigation, region, max_pri
 		return(FALSE)
 	}
 	
-	#print("checking dates 1")
 	if (daterange[1] > daterange[2]){
 		showNotification("Error: the entered start date occurs after the end date.")
 		return(FALSE)
 	}
-	
-	#print("checking dates 2")
+
 	if ((irrigation_input == 1) & (any(irrigation$date > daterange[2]) | any(irrigation$date < daterange[1]))){
 		showNotification("Error: the entered irrigation date is not in the selected date range!")
 		return(FALSE)
 	}
-	
-	#print("checking dates 3")
-	#print(region)
+
 	if (region == "IR"){
 		if (daterange[2] - daterange[1] > 365) {
 			showNotification("Error: the entered date range is longer than the wheat growing season!")
@@ -51,7 +47,6 @@ check_dates <- function(daterange, irrigation_input, irrigation, region, max_pri
 	
 	} else {
 		
-		#print("checking dates 4")
 		if (daterange[2] - daterange[1] > 275) {
 			showNotification("Error: the entered date range is longer than the wheat growing season!")
 			return(FALSE)
