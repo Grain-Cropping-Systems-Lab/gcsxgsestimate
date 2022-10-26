@@ -27,5 +27,5 @@ gcsxgsestimate::run_app(DATABASE_URL = "",
 
 ## Docker ----
 golem::add_dockerfile_heroku()
-golem::add_dockerfile_with_renv_heroku(output_dir = "deploy")
+#golem::add_dockerfile_with_renv_heroku(output_dir = "deploy")
 
