@@ -30,4 +30,4 @@ ADD . /build_zone
 WORKDIR /build_zone
 RUN R -e 'remotes::install_local(upgrade="never")'
 RUN rm -rf /build_zone
-CMD R -e "options('shiny.port'=$PORT,shiny.host='0.0.0.0');gcsxgsestimate::run_app()"
+CMD R -e "options('shiny.port'=$PORT,shiny.host='0.0.0.0');gcsxgsestimate::run_app(DATABASE_URL = Sys.getenv('DATABASE_URL'), MAPS_API_KEY = Sys.getenv('MAPS_API_KEY'))"
