@@ -186,8 +186,6 @@ location_page_server <- function(id, parent, con, api_key){
 																					amount = numeric()))
 
 			observeEvent(input$switchtab, {
-			  
-			  print("step 1")
 
 				if (input$irrigation == 1){
 					for (i in seq(1, input$numIrr)){
@@ -207,16 +205,11 @@ location_page_server <- function(id, parent, con, api_key){
 					}
 
 				}
-			  
-			  print("step 2")
 
 				irrigation_check <- !any(irrigation()$amount < 0 | irrigation()$amount > 12)
 				if(irrigation_check == FALSE){
 					showNotification("Error: Irrigation amounts out of bounds!", id = "irrigation_error")
 				}
-				
-				print("step 3")
-				print(irrigation_check)
 				
 				date_check <- check_dates(daterange = input$daterange,
 																	irrigation_input = input$irrigation,
@@ -224,14 +217,9 @@ location_page_server <- function(id, parent, con, api_key){
 																	region = map_outputs$region,
 																	max_prism_date = max_prism_date)
 				
-				print(date_check)
-				
 				
 				
 				if(date_check == TRUE & irrigation_check == TRUE){
-				  
-				  print(map_outputs$lat)
-				  print(map_outputs$lon)
 				  
 				  shinyBS::updateButton(parent, inputId = "switchtab", label = "Next", block = TRUE, style="default", size = "lg", disabled = TRUE)
 				  
@@ -418,9 +406,6 @@ location_page_server <- function(id, parent, con, api_key){
 				  bind_data(bind_rows(bind_data(), present_data_long, historical_data_long))
 				  
 				}
-				
-				print("step 4")
-				
 				
 				shinyjs::runjs(autoscroll_to_anchor)
 

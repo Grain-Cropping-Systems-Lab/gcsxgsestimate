@@ -1,6 +1,8 @@
 graph_nuptake_plotly <- function(weather_data, lat, long, nuptake_mod, con) {
 
 	county <- DBI::dbGetQuery(con, paste0("SELECT namelsad FROM grain.ca_counties WHERE ST_Contains(geom, ST_GeomFromText('POINT(", long, " ", lat, ")',4326));"))$namelsad
+	
+	
 	plot_title <- paste0(c(""),
 		substr(as.character(min(weather_data[weather_data$time == "present", "date"])), 6,10), " to ",
 		substr(as.character(max(weather_data[weather_data$time == "present", "date"])), 6,10), " (", county, "; ", as.character(round(lat, 2)), ", ", as.character(round(long, 2)), ")")

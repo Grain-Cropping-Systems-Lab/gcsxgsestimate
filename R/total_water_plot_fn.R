@@ -17,7 +17,7 @@ total_water_plot <- function(weather_data, total_water, irrigation, present_data
 			group_by(time) %>%
 			arrange(date) %>%
 			mutate(water_cumsum = cumsum(amount))
-
+		
 	county <- DBI::dbGetQuery(con, paste0("SELECT namelsad FROM grain.ca_counties WHERE ST_Contains(geom, ST_GeomFromText('POINT(", long, " ", lat, ")',4326));"))$namelsad
 	plot_title <- paste0(c(""),
 											 substr(as.character(min(total_water[total_water$time == "present", "date"]$date)), 6,10), " to ",

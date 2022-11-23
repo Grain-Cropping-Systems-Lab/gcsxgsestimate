@@ -180,9 +180,6 @@ initial_outputs_gs_server <- function(id,
 #												 new_days = num_days*days_adjust,
 #												 date = min_date() + new_days)
 #								
-#								print("test bug")
-#								
-#								print(as.data.frame(wd_temp$gdd_cumsum*adjustment_factor))
 #								
 #								wd_temp$feekes <- apply(as.data.frame(wd_temp$gdd_cumsum*adjustment_factor), 1, gdd_to_feekes)
 #								
@@ -371,6 +368,11 @@ initial_outputs_gs_server <- function(id,
 																																 lat = map_outputs()$lat,
 																																 long = map_outputs()$lon,
 																																 con = con))
+			
+			print("LONG CHECK")
+			print(class(map_outputs()$lon))
+			print(map_outputs()$lon)
+			
 
 			output$nuptake_plotly <- plotly::renderPlotly(graph_nuptake_plotly(weather_data = weather_data(),
 																																 lat = map_outputs()$lat,
