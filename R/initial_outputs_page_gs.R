@@ -2,6 +2,13 @@ initial_outputs_gs_ui <- function(id, label = "IO") {
 	ns <- NS(id)
 	tabItem(tabName = "initial_outputs",
 					fluidRow(
+					  column(6,
+					         box(title = p("Growth Stage"), solidHeader = TRUE, status = "primary", width = 12,
+					             fluidRow(column(12, htmlOutput(ns("growth_stage_name")))),
+					             fluidRow(column(12, img(src="www/growth_stages_linear.png", class="img-responsive"))),
+					             fluidRow(column(12, class = 'slider-container', shinyWidgets::noUiSliderInput(inputId = ns("growth_stage_user_input"), label = NULL, color = "#005fae", min = 0, max = 14, value = 0, step = 0.1))),
+					         )
+					  ),
 						column(6,
 									 box(title = p("Seasonal Precipitation & N Uptake"),
 									 		solidHeader = TRUE,
@@ -41,18 +48,9 @@ initial_outputs_gs_ui <- function(id, label = "IO") {
 									 						 downloadButton(ns("downloadCSV"), "Download CSV")
 									 			)
 									 		)
-									 )
 									 ),
-						column(6,
-									 box(title = p("Growth Stage"), solidHeader = TRUE, status = "primary", width = 12,
-									 		fluidRow(column(12, htmlOutput(ns("growth_stage_name")))),
-									 		fluidRow(column(12, img(src="www/growth_stages_linear.png", class="img-responsive"))),
-									 		fluidRow(column(12, class = 'slider-container', shinyWidgets::noUiSliderInput(inputId = ns("growth_stage_user_input"), label = NULL, color = "#005fae", min = 0, max = 14, value = 0, step = 0.1))),
-													 ),
-									 br(),
-									 shinyBS::bsButton(ns("back_to_location"), label = "Back", block = TRUE, style="default", size = "lg")#,
-									 #bsButton(ns("to_ssms"), label = "Next", block = TRUE, style="default", size = "lg")
-						))
+									 shinyBS::bsButton(ns("back_to_location"), label = "Back", block = TRUE, style="default", size = "lg")
+									 ))
 	)
 }
 
