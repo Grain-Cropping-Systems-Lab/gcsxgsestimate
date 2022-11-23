@@ -15,6 +15,10 @@ initial_outputs_gs_ui <- function(id, label = "IO") {
 									 		status = "primary",
 									 		width = 12,
 									 		fluidRow(
+									 		  column(12,
+									 		         p("The majority of the seasonal N uptake in a wheat crop happens between tillering and flowering. During these stages of growth there is rapid N uptake - making this an important time to keep track of plant N status. The graphs show the relationship between time and N uptake as well as time and <a href = 'http://ipm.ucanr.edu/WEATHER/ddconcepts.html' target='_blank'>growing degree days</a> and seasonal water."))
+									 		),
+									 		fluidRow(
 									 			column(12,
 									 						 valueBoxOutput(ns("rainfall"), width = 6),
 									 						 valueBoxOutput(ns("nuptake"), width = 6)
@@ -366,11 +370,6 @@ initial_outputs_gs_server <- function(id,
 																																 lat = map_outputs()$lat,
 																																 long = map_outputs()$lon,
 																																 con = con))
-			
-			print("LONG CHECK")
-			print(class(map_outputs()$lon))
-			print(map_outputs()$lon)
-			
 
 			output$nuptake_plotly <- plotly::renderPlotly(graph_nuptake_plotly(weather_data = weather_data(),
 																																 lat = map_outputs()$lat,
@@ -466,27 +465,39 @@ initial_outputs_gs_server <- function(id,
 			output$growth_stage_name <- renderUI({
 
 				feekes_current <- gdd_to_feekes(max(weather_data()[weather_data()$time == "present" & weather_data()$quality == "prism" & weather_data()$measurement == "gdd_cumsum", ]$amount))
-
-				if (input$growth_stage_user_input < 2.5 | input$growth_stage_user_input > 10.3){
-					HTML(paste("<h5>Your <a href = 'https://anrcatalog.ucanr.edu/pdf/8165.pdf' target='_blank'>growth stage</a> is estimated to be <strong style='color:Tomato;'>",
-										 growth_stage_estimate(feekes_current),
-										 ".</strong> The growth stage is the most advanced growth stage that 50% of plants in the field have reached. Make adjustments to the estimated crop growth stage below if you want to change the seasonal N uptake estimate.", sep = ""))
+				
+				forecast_gdd <-max(weather_data()[weather_data()$time == "present" & weather_data()$quality == "forecast" & weather_data()$measurement == "gdd_cumsum", ]$amount)
+				
+				max_dates <- weather_data() %>% 
+				  group_by(quality) %>% 
+				  summarize(max(date)) %>% 
+				  tidyr::pivot_wider(names_from = quality, values_from = `max(date)`)
+				
+				time_diff <- max_dates %>% 
+				  mutate(diff = forecast - prism) %>% 
+				  pull(diff) %>% 
+				  as.numeric()
+				
+			
+				if(is.finite(forecast_gdd)){
+				  feekes_forecast <- gdd_to_feekes(forecast_gdd)
+				  
+				  HTML(paste("<h5>Your <a href = 'https://anrcatalog.ucanr.edu/pdf/8165.pdf' target='_blank'>growth stage</a> is estimated to be <strong>",
+				             growth_stage_estimate(feekes_current),
+				             ".</strong> Your growth stage forecasted to be <strong>",  growth_stage_estimate(feekes_forecast), "</strong> in ",  time_diff , " days (", ifelse(substr(max_dates$forecast, 6, 6) == 0,
+				                                                                                                                                                                stringr::str_replace(substr(max_dates$forecast, 7, 10), "-", "/"),
+				                                                                                                                                                                stringr::str_replace(substr(max_dates$forecast, 6, 10), "-", "/")), "). The growth stage is the most advanced growth stage that 50% of plants in the field have reached. Make adjustments to the estimated crop growth stage below if you want to change the seasonal N uptake estimate.</h5>", sep = ""))
+				  
 				} else {
-					HTML(paste("<h5>Your <a href = 'https://anrcatalog.ucanr.edu/pdf/8165.pdf' target='_blank'>growth stage</a> is estimated to be <strong>",
-										 growth_stage_estimate(feekes_current),
-										 ".</strong> The growth stage is the most advanced growth stage that 50% of plants in the field have reached. Make adjustments to the estimated crop growth stage below if you want to change the seasonal N uptake estimate.</h5>", sep = ""))
+				  
+				  HTML(paste("<h5>Your <a href = 'https://anrcatalog.ucanr.edu/pdf/8165.pdf' target='_blank'>growth stage</a> is estimated to be <strong>",
+				             growth_stage_estimate(feekes_current),
+				             ".</strong> The growth stage is the most advanced growth stage that 50% of plants in the field have reached. Make adjustments to the estimated crop growth stage below if you want to change the seasonal N uptake estimate.</h5>", sep = ""))
+				  
 				}
-
-
+				
 			})
 
-			observeEvent(input$to_ssms, {
-
-				if(input$growth_stage_user_input >= 2.5 & input$growth_stage_user_input <= 10.3){
-					updateTabItems(parent, "tabs", "site_measures")
-				}
-
-			})
 
 	}) # end of observe
 
