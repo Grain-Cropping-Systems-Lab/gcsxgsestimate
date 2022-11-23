@@ -16,7 +16,8 @@ initial_outputs_gs_ui <- function(id, label = "IO") {
 									 		width = 12,
 									 		fluidRow(
 									 		  column(12,
-									 		         p("The majority of the seasonal N uptake in a wheat crop happens between tillering and flowering. During these stages of growth there is rapid N uptake - making this an important time to keep track of plant N status. The graphs show the relationship between time and N uptake as well as time and <a href = 'http://ipm.ucanr.edu/WEATHER/ddconcepts.html' target='_blank'>growing degree days</a> and seasonal water."))
+									 		         HTML("The majority of the seasonal N uptake in a wheat crop happens between tillering and flowering. During these stages of growth there is rapid N uptake - making this an important time to keep track of plant N status. The graphs show the relationship between time and N uptake as well as time and <a href = 'http://ipm.ucanr.edu/WEATHER/ddconcepts.html' target='_blank'>growing degree days</a> and seasonal water."),
+									 		         br())
 									 		),
 									 		fluidRow(
 									 			column(12,
