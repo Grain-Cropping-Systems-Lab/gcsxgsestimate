@@ -24,7 +24,7 @@ range is limited to one ", actionLink(ns("actionlink"), "wheat growing season"),
 									 								 		br()
 									 								 )),
 									 conditionalPanel(condition = "!output.nuptake_panel",
-									 								 box(title = p("Crop Variety"), solidHeader = TRUE, status = "primary", width = 12,
+									 								 box(title = p("Crop Type"), solidHeader = TRUE, status = "primary", width = 12,
 									 		p("Choose the crop type or variety (if known) for the field of interest."),
 									 		uiOutput(outputId = ns("variety")))),
 									 box(title = p("Irrigation"), solidHeader = TRUE, status = "primary", width = 12,
