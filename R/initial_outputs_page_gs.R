@@ -15,9 +15,7 @@ initial_outputs_gs_ui <- function(id, label = "IO") {
 									 		status = "primary",
 									 		width = 12,
 									 		fluidRow(
-									 		  column(12,
-									 		         p(HTML("The majority of the seasonal N uptake in a wheat crop happens between tillering and flowering. During these stages of growth there is rapid N uptake - making this an important time to keep track of plant N status. The graphs show the relationship between time and N uptake as well as time and <a href = 'http://ipm.ucanr.edu/WEATHER/ddconcepts.html' target='_blank'>growing degree days</a> and seasonal water.")),
-									 		         p(HTML("At X stage of growth (the stage of growth selected) N uptake is estimates to be X of seasonal total."))
+									 		  column(12, htmlOutput(ns("reactive_growth_stage"))
 									 		         )
 									 		),
 									 		fluidRow(
@@ -475,13 +473,14 @@ initial_outputs_gs_server <- function(id,
 				  summarize(max(date)) %>% 
 				  tidyr::pivot_wider(names_from = quality, values_from = `max(date)`)
 				
-				time_diff <- max_dates %>% 
-				  mutate(diff = forecast - prism) %>% 
-				  pull(diff) %>% 
-				  as.numeric()
-				
-			
-				if(is.finite(forecast_gdd)){
+				if("forecast" %in% names(max_dates)){
+				  print("forecast present")
+				  
+				  time_diff <- max_dates %>% 
+				    mutate(diff = forecast - prism) %>% 
+				    pull(diff) %>% 
+				    as.numeric()
+				  
 				  feekes_forecast <- gdd_to_feekes(forecast_gdd)
 				  
 				  HTML(paste("<h5>Your <a href = 'https://anrcatalog.ucanr.edu/pdf/8165.pdf' target='_blank'>growth stage</a> is estimated to be <strong>",
@@ -491,13 +490,17 @@ initial_outputs_gs_server <- function(id,
 				                                                                                                                                                                stringr::str_replace(substr(max_dates$forecast, 6, 10), "-", "/")), "). The growth stage is the most advanced growth stage that 50% of plants in the field have reached. Make adjustments to the estimated crop growth stage below if you want to change the seasonal N uptake estimate.</h5>", sep = ""))
 				  
 				} else {
+				  print("forecast not included")
 				  
 				  HTML(paste("<h5>Your <a href = 'https://anrcatalog.ucanr.edu/pdf/8165.pdf' target='_blank'>growth stage</a> is estimated to be <strong>",
 				             growth_stage_estimate(feekes_current),
-				             ".</strong> The growth stage is the most advanced growth stage that 50% of plants in the field have reached. Make adjustments to the estimated crop growth stage below if you want to change the seasonal N uptake estimate.</h5>", sep = ""))
-				  
+				             ".</strong> The growth stage is the most advanced growth stage that 50% of plants in the field have reached. Make adjustments to the estimated crop growth stage below if you want to change the seasonal N uptake estimate.</h5><br></br>", sep = ""))
 				}
 				
+			})
+			
+			output$reactive_growth_stage <- renderUI({
+			  HTML(paste("<h5>The majority of the seasonal N uptake in a wheat crop happens between tillering and flowering. During these stages of growth there is rapid N uptake - making this an important time to keep track of plant N status. The graphs show the relationship between time and N uptake as well as time and <a href = 'http://ipm.ucanr.edu/WEATHER/ddconcepts.html' target='_blank'>growing degree days</a> and seasonal water.", "<br></br>", "<strong>At " , growth_stage_estimate(input$growth_stage_user_input)," N uptake is estimates to be ", round(gdd_to_nuptake(feekes_to_gdd(input$growth_stage_user_input)), 0), "% of seasonal total.</strong></h5>"))
 			})
 
 
