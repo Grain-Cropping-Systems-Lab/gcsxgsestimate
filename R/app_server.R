@@ -56,7 +56,7 @@ app_server <- function(input, output, session) {
   })
   
   
-  dashboard_header_server("header")
+  dashboard_header_server("header", con = con)
   
   location_outputs <- location_page_server("location",
                                            parent = session,
