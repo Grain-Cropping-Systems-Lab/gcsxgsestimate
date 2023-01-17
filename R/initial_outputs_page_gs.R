@@ -523,6 +523,7 @@ initial_outputs_gs_server <- function(id,
 	})
 	
 	observeEvent(input$back_to_location, {
+	  print("going back")
 		updateTabItems(parent, "tabs", "location")
 	})
 

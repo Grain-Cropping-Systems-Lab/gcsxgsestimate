@@ -256,7 +256,7 @@ location_page_server <- function(id, parent, con, api_key){
 				    
 				    incProgress(10)
 				    
-				    present_data <- prism_date_range_all(con = con, lat = map_outputs$lat, long = map_outputs$lon, from_date = input$daterange[1], to_date = input$daterange[2])
+				    present_data <- prism_date_range_all(con = con, lat = map_outputs$lat, long = map_outputs$lon, from_date = input$daterange[1], to_date = input$daterange[2]) 
 				    
 				    # remove forecast data that overlaps with PRISM data and NA's
 				    removes <- present_data %>%
@@ -265,6 +265,7 @@ location_page_server <- function(id, parent, con, api_key){
 				      filter(quality == "forecast")
 				    
 				    present_data <- anti_join(present_data, removes) %>% # recalculate cumulative sums in case there was a failed data point in PRISM or forecast
+				      tidyr::drop_na() %>% # clean data so that is there are NA's they are dropped 
 				      mutate(precip_cumsum = cumsum(ppt),
 				             gdd_cumsum = cumsum(gdd),
 				             nuptake_perc = gdd_to_nuptake(gdd_cumsum),
@@ -273,17 +274,23 @@ location_page_server <- function(id, parent, con, api_key){
 				    
 				    
 				    lowset <- present_data[present_data$gdd_cumsum <= 1125,]
-				    variableset <-present_data[present_data$gdd_cumsum > 1125,]
 				    
 				    lowset$correction <- (variety_list %>% 
 				                            filter(group == 1000) %>% 
 				                            filter(crop_sub_type == input$variety))$relative_gs
-				    
-				    variableset$correction <- apply(as.matrix(variableset$gdd_cumsum), 1, FUN = gs_correction, crop_type = input$variety, gd_rel_gdds_input = variety_list)
-				    
-				    present_data <- bind_rows(lowset, variableset) %>% 
-				      mutate(nuptake_perc = gdd_to_nuptake(gdd_cumsum*correction)) %>%
-				      tidyr::drop_na()
+
+				    if(max(present_data$gdd_cumsum) > 1125){
+				      variableset <-present_data[present_data$gdd_cumsum > 1125,]
+				      variableset$correction <- apply(as.matrix(variableset$gdd_cumsum), 1, FUN = gs_correction, crop_type = input$variety, gd_rel_gdds_input = variety_list)
+				      
+				      present_data <- bind_rows(lowset, variableset) %>% 
+				        mutate(nuptake_perc = gdd_to_nuptake(gdd_cumsum*correction)) %>%
+				        tidyr::drop_na()
+				    } else {
+				      present_data <- lowset %>% 
+				        mutate(nuptake_perc = gdd_to_nuptake(gdd_cumsum*correction)) %>%
+				        tidyr::drop_na()
+				    }
 				    
 				    shinyBS::updateButton(session, inputId = "switchtab", label = "Next", block = TRUE, style="default", size = "lg", disabled = FALSE)
 				  }) # end of progress bar tracking
