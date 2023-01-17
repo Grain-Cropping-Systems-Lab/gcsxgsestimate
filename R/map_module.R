@@ -106,6 +106,7 @@ map_mod_server <- function(id, api_key, shapefile_path, region_behavior, default
 				rd <- region_data(shapefile = shapefile,
 													markers = data.frame(lat = input$map_marker_drag$lat,
 																							 lon = input$map_marker_drag$lon))
+				
 
 				if(nrow(rd) == 0){
 					showNotification("Error: no data for this location - moving point to default location!", id = "region_error")
@@ -126,6 +127,7 @@ map_mod_server <- function(id, api_key, shapefile_path, region_behavior, default
 											 type = "drag")
 					}
 				}
+				
 
 
 			})

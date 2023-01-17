@@ -50,7 +50,6 @@ range is limited to one ", actionLink(ns("actionlink"), "wheat growing season"),
 									 		#p("If you are satisfied with the information you entered and are ready to gather your site-specific data, click 'Next' below."),
 
 						),
-						shinyBS::bsButton(ns("back_to_landing"), label = "Back", block = TRUE, style="default", size = "lg"),
 						shinyBS::bsButton(ns("switchtab"), label = "Next", block = TRUE, style="default", size = "lg")
 						)
 					)
@@ -411,9 +410,6 @@ location_page_server <- function(id, parent, con, api_key){
 
 			})
 
-			observeEvent(input$back_to_landing, {
-				updateTabItems(parent, "tabs", "landing_page")
-			})
 
 			return(list(map_outputs = reactive({map_outputs}),
 									growth_stage_option = reactive({input$growth_stage_user_input_1}),
