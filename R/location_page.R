@@ -198,9 +198,9 @@ location_page_server <- function(id, parent, con, api_key){
 						amount <- ifelse(length(input[[paste0("Irrigation", i)]]) == 0,
 														 0,
 														 input[[paste0("Irrigation", i)]])
-
-						#irrigation(bind_rows(irrigation(), data.frame(date = date, amount = amount)))
-						irrigation(data.frame(date = date, amount = amount))
+ # note the way this works has changed in different versions of packages - a source of error in irrigation several times
+						irrigation(bind_rows(irrigation(), data.frame(date = date, amount = amount)))
+						#irrigation(data.frame(date = date, amount = amount))
 					}
 
 				}

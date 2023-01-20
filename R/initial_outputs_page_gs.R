@@ -75,6 +75,7 @@ initial_outputs_gs_server <- function(id,
 			max_prism_date <- DBI::dbGetQuery(con, "SELECT DISTINCT(date) FROM grain.prism WHERE quality != 'forecast' ORDER BY date DESC LIMIT 1;")
 
 			observe({
+			 
 				if(nrow(req(prelim_weather_data())) > 0){
 
 				if(req(map_outputs()$nuptakemod) == FALSE){
