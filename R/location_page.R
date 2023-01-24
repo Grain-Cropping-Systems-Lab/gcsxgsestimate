@@ -150,7 +150,7 @@ location_page_server <- function(id, parent, con, api_key){
 			})
 			
 			output$variety <- renderUI({
-			  radioButtons(inputId = session$ns("variety"), label = "Choose the crop type for the field of interest.", choices = unique(variety_list$crop_sub_type), selected = "Common wheat")
+			  div(radioButtons(inputId = session$ns("variety"), label = "Choose the crop type for the field of interest.", choices = unique(variety_list$crop_sub_type), selected = "Common wheat"), class = "not_bold")
 			})
 
 			output$growingSeasonImage <- renderImage({

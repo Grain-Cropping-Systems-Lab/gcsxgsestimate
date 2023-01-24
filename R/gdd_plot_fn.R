@@ -127,7 +127,7 @@ graph_gdd_plotly <- function(weather_data, lat, long, nuptake_mod, con) {
 	                              yaxis = list(range = range(data$amount) * c(1, 1.15), title = "Cumulative GDD", tickfont = tick_font, titlefont = title_font),
 												margin = list(l = 50, r = 50, b = 0, t = 25),
 												showlegend = T, legend = list(orientation = 'h', y = -0.25)) %>% 
-	  add_text(showlegend = FALSE, x = c(min(data$date)+20,min(data$date)+20), y = c(425,893),
+	  plotly::add_text(showlegend = FALSE, x = c(min(data$date)+20,min(data$date)+20), y = c(425,893),
 	           text = c("tillering","heading"))
 	
 	return(fig)

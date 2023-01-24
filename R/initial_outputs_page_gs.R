@@ -1,4 +1,4 @@
-initial_outputs_gs_ui <- function(id, label = "IO") {
+initial_outputs_gs_ui <- function(id, map_outputs, label = "IO") {
 	ns <- NS(id)
 	tabItem(tabName = "initial_outputs",
 					fluidRow(
@@ -42,9 +42,7 @@ initial_outputs_gs_ui <- function(id, label = "IO") {
 									 		),
 									 		fluidRow(
 									 			column(12,
-									 						 radioButtons(ns("which_plot"),"",
-									 						 						 choices = c("N uptake/Precip. (%)", "Cumlative GDD", "Seasonal Water (in.)"),
-									 						 						 selected = "N uptake/Precip. (%)", inline = TRUE)
+									 						   uiOutput(outputId = ns("which_plot"))
 									 			)
 									 		),
 									 		fluidRow(
@@ -87,6 +85,18 @@ initial_outputs_gs_server <- function(id,
 				}
 
 				}
+			})
+			
+			output$which_plot <- renderUI({
+			  if(map_outputs()$nuptakemod == TRUE){
+			  radioButtons(session$ns("which_plot"),label = "",
+			               choices = c("N uptake/Precip. (%)", "Cumlative GDD", "Seasonal Water (in.)"),
+			               selected = "N uptake/Precip. (%)", inline = TRUE)
+			  } else {
+			    radioButtons(session$ns("which_plot"),label = "",
+			                 choices = c("Cumlative GDD", "Seasonal Water (in.)"),
+			                 selected = "Seasonal Water (in.)", inline = TRUE)
+			  }
 			})
 
 			daterange_full <- reactive({
@@ -481,7 +491,6 @@ initial_outputs_gs_server <- function(id,
 				  tidyr::pivot_wider(names_from = quality, values_from = `max(date)`)
 				
 				if("forecast" %in% names(max_dates)){
-				  print("forecast present")
 				  
 				  time_diff <- max_dates %>% 
 				    mutate(diff = forecast - prism) %>% 
@@ -497,7 +506,6 @@ initial_outputs_gs_server <- function(id,
 				                                                                                                                                                                stringr::str_replace(substr(max_dates$forecast, 6, 10), "-", "/")), "). The growth stage is the most advanced growth stage that 50% of plants in the field have reached. Make adjustments to the estimated crop growth stage below if you want to change the seasonal N uptake estimate.</h5>", sep = ""))
 				  
 				} else {
-				  print("forecast not included")
 				  
 				  HTML(paste("<h5>Your <a href = 'https://anrcatalog.ucanr.edu/pdf/8165.pdf' target='_blank'>growth stage</a> is estimated to be <strong>",
 				             growth_stage_estimate(feekes_current),
