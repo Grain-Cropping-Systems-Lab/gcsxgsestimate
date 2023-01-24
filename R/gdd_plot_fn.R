@@ -120,11 +120,16 @@ graph_gdd_plotly <- function(weather_data, lat, long, nuptake_mod, con) {
 	tick_font = list(size = 14)
 	title_font = list(size = 14)
 
-	fig <- fig %>% plotly::layout(title = plot_title, font = list(size = 11),
-												xaxis = list(title = F, tickfont = tick_font, titlefont = title_font),
-												yaxis = list(range = range(data$amount) * c(1, 1.15), title = "Cumulative GDD", tickfont = tick_font, titlefont = title_font),
+	fig <- fig %>% plotly::layout(title = plot_title,
+	                              font = list(size = 11),
+	                              shapes = list(hline(350), hline(500), hline(800), hline(986)),
+	                              xaxis = list(title = F, tickfont = tick_font, titlefont = title_font), 
+	                              yaxis = list(range = range(data$amount) * c(1, 1.15), title = "Cumulative GDD", tickfont = tick_font, titlefont = title_font),
 												margin = list(l = 50, r = 50, b = 0, t = 25),
-												showlegend = T, legend = list(orientation = 'h', y = -0.25))
+												showlegend = T, legend = list(orientation = 'h', y = -0.25)) %>% 
+	  add_text(showlegend = FALSE, x = c(min(data$date)+20,min(data$date)+20), y = c(425,893),
+	           text = c("tillering","heading"))
+	
 	return(fig)
 
 }
