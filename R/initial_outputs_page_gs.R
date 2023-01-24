@@ -446,20 +446,26 @@ initial_outputs_gs_server <- function(id,
 				}
 
 			})
-
+			
 			output$downloadCSV <- downloadHandler(
 
 				filename = function() {
 					paste0("weather_data_", "lat_", map_outputs()$lat, "_long_", map_outputs()$lon, "_", daterange_full()[1], "_", daterange_full()[2], ".csv")
 				},
 				content = function(file) { write.csv(x = prelim_weather_data() %>%
-																						 	filter(measurement == 'ppt' | measurement == 'tmax' | measurement == 'tmin') %>%
-																						 	mutate(key = if_else(measurement == "ppt", paste(measurement, time, "in", sep = "_"),
-																						 											 paste(measurement, time, "F", sep = "_")),
-																						 				 data_type = if_else(quality == "prism", "current", quality),
-																						 				 amount = if_else(measurement == "ppt", amount/25.4, amount)) %>%
-																						 	select(-measurement, - time, -quality, -data_type) %>%
-																						 	tidyr::spread(key = key, value = amount),
+				                                       filter(measurement == 'ppt' | 
+				                                                measurement == 'tmax' | 
+				                                                measurement == 'tmin' | 
+				                                                measurement == 'gdd') %>%
+				                                       mutate(key = if_else(measurement == "ppt",
+				                                                            paste(measurement, time, "in", sep = "_"),
+				                                                            if_else(measurement == "tmax" | measurement == "tmin",
+				                                                                    paste(measurement, time, "F", sep = "_"), 
+				                                                                    paste(measurement, time, sep = "_"))),
+				                                              data_type = if_else(quality == "prism", "current", quality),
+				                                              amount = if_else(measurement == "ppt", amount/25.4, amount)) %>%
+				                                       select(-measurement, - time, -quality, -data_type) %>%
+				                                       tidyr::spread(key = key, value = amount),
 																						 file, row.names = FALSE) }
 			)
 

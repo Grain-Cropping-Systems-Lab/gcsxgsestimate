@@ -25,7 +25,7 @@ range is limited to one ", actionLink(ns("actionlink"), "wheat growing season"),
 									 								 )),
 									 conditionalPanel(condition = "!output.nuptake_panel",
 									 								 box(title = p("Crop Type"), solidHeader = TRUE, status = "primary", width = 12,
-									 		p("Choose the crop type or variety (if known) for the field of interest."),
+									 		#p("Choose the crop type for the field of interest."),
 									 		uiOutput(outputId = ns("variety")))),
 									 box(title = p("Irrigation"), solidHeader = TRUE, status = "primary", width = 12,
 									 		checkboxInput(ns("moisture"), "This field was planted into moisture or irrigated up.", value = FALSE),
@@ -71,7 +71,9 @@ location_page_server <- function(id, parent, con, api_key){
 			
 			max_prism_date <- DBI::dbGetQuery(con, "SELECT DISTINCT(date) FROM grain.prism WHERE quality != 'forecast' ORDER BY date DESC LIMIT 1;")
 			
-			variety_list <- readr::read_csv("data/rel_gdd_crop_type.csv") 
+			variety_list <- readr::read_csv("data/rel_gdd_crop_type.csv") %>% 
+			  mutate(crop_sub_type = if_else(crop_sub_type == "COMMON", "Common wheat", 
+			                                 if_else(crop_sub_type == "DURUM", "Durum wheat", "Triticale")))
 			
 			output$daterange <- renderUI({
 			  dateRangeInput(session$ns('daterange'), label = "", format = 'mm/dd/yyyy',
@@ -148,7 +150,7 @@ location_page_server <- function(id, parent, con, api_key){
 			})
 			
 			output$variety <- renderUI({
-			  selectInput(inputId = session$ns("variety"), label = "", choices = unique(variety_list$crop_sub_type), selected = "COMMON")
+			  radioButtons(inputId = session$ns("variety"), label = "Choose the crop type for the field of interest.", choices = unique(variety_list$crop_sub_type), selected = "Common wheat")
 			})
 
 			output$growingSeasonImage <- renderImage({
