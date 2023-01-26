@@ -10,7 +10,7 @@ initial_outputs_gs_ui <- function(id, map_outputs, label = "IO") {
 					         )
 					  ),
 						column(6,
-									 box(title = p("Seasonal Precipitation & N Uptake"),
+									 box(title = p("Seasonal Precipitation & N Uptake", actionLink(ns("gdd_info"), label = "", icon = icon("info-circle"), class = "btn-info")),
 									 		solidHeader = TRUE,
 									 		status = "primary",
 									 		width = 12,
@@ -27,7 +27,7 @@ initial_outputs_gs_ui <- function(id, map_outputs, label = "IO") {
 									 		fluidRow(
 									 			column(12,
 									 			       conditionalPanel(
-									 			         condition = "input.which_plot == 'Cumlative GDD'", ns = ns,
+									 			         condition = "input.which_plot == 'Growth Stage Estimate'", ns = ns,
 									 			         plotly::plotlyOutput(ns("gdd_plotly")) %>% shinycssloaders::withSpinner(type = 6, color="#005fae")
 									 			       ),
 									 						 conditionalPanel(
@@ -92,15 +92,23 @@ initial_outputs_gs_server <- function(id,
 				}
 			})
 			
+			observeEvent(input$gdd_info, {
+			  showModal(
+			    modalDialog(title = "Climate measurements",
+			                p("Climate data for each location was obtained from the PRISM Climate Group (PRISM Climate Group, 2021). Cumulative precipitation and growing degree-days from sowing are estimated for each location and compared to 10-year means. Degree-days were estimated using the corrected single triangle method. Temperature thresholds of 87°F (30°C) and 44°F (7°C) were used.")
+			    )
+			  )
+			})
+			
 			output$which_plot <- renderUI({
 			  if(map_outputs()$nuptakemod == TRUE){
 			  radioButtons(session$ns("which_plot"),label = "",
-			               choices = c("N uptake/Precip. (%)", "Cumlative GDD", "Seasonal Water (in.)"),
-			               selected = "N uptake/Precip. (%)", inline = TRUE)
+			               choices = c("Growth Stage Estimate", "N uptake/Precip. (%)", "Seasonal Water (in.)"),
+			               selected = "Growth Stage Estimate", inline = TRUE)
 			  } else {
 			    radioButtons(session$ns("which_plot"),label = "",
-			                 choices = c("Cumlative GDD", "Seasonal Water (in.)"),
-			                 selected = "Seasonal Water (in.)", inline = TRUE)
+			                 choices = c("Growth Stage Estimate", "Seasonal Water (in.)"),
+			                 selected = "Growth Stage Estimate", inline = TRUE)
 			  }
 			})
 
