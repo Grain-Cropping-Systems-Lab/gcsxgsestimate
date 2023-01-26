@@ -25,6 +25,6 @@ hline <- function(y = 0, color = "black") {
     xref = "paper",
     y0 = y,
     y1 = y,
-    line = list(color = color)
+    line = list(color = color, dash = "dot")
   )
 }

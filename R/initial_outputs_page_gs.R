@@ -79,7 +79,12 @@ initial_outputs_gs_server <- function(id,
 				if(req(map_outputs()$nuptakemod) == FALSE){
 				  shinyWidgets::updateNoUiSliderInput(session = parent, inputId = ns("growth_stage_user_input"), value = reverseValue(growth_stage_option()))
 				} else {
-					val <- round(gdd_to_feekes(max(isolate(prelim_weather_data())[isolate(prelim_weather_data())$quality != "forecast" & isolate(prelim_weather_data())$time == "present" & isolate(prelim_weather_data())$measurement == "gdd_cumsum", "amount"], na.rm = TRUE)), 1)
+				  
+				  present_prism_gdd <- weather_data()[weather_data()$time == "present" & weather_data()$quality == "prism" & weather_data()$measurement == "gdd_cumsum", ]
+				  
+				  val <- gdd_to_feekes((present_prism_gdd[present_prism_gdd$amount == max(present_prism_gdd$amount), ]$amount)*(present_prism_gdd[present_prism_gdd$amount == max(present_prism_gdd$amount), ]$correction))
+				  
+#					val <- round(gdd_to_feekes(max(isolate(prelim_weather_data())[isolate(prelim_weather_data())$quality != #"forecast" & isolate(prelim_weather_data())$time == "present" & isolate(prelim_weather_data())$measurement == #"gdd_cumsum", "amount"], na.rm = TRUE)), 1)
 					
 					shinyWidgets::updateNoUiSliderInput(parent, inputId = ns("growth_stage_user_input"), value = reverseValue(val))
 				}
@@ -463,6 +468,7 @@ initial_outputs_gs_server <- function(id,
 					paste0("weather_data_", "lat_", map_outputs()$lat, "_long_", map_outputs()$lon, "_", daterange_full()[1], "_", daterange_full()[2], ".csv")
 				},
 				content = function(file) { write.csv(x = prelim_weather_data() %>%
+				                                       select(-correction) %>% 
 				                                       filter(measurement == 'ppt' | 
 				                                                measurement == 'tmax' | 
 				                                                measurement == 'tmin' | 
@@ -480,10 +486,13 @@ initial_outputs_gs_server <- function(id,
 			)
 
 			output$growth_stage_name <- renderUI({
-
-				feekes_current <- gdd_to_feekes(max(weather_data()[weather_data()$time == "present" & weather_data()$quality == "prism" & weather_data()$measurement == "gdd_cumsum", ]$amount))
+			  
+			  present_prism_gdd <- weather_data()[weather_data()$time == "present" & weather_data()$quality == "prism" & weather_data()$measurement == "gdd_cumsum", ]
+			  
+				feekes_current <- gdd_to_feekes((present_prism_gdd[present_prism_gdd$amount == max(present_prism_gdd$amount), ]$amount)*(present_prism_gdd[present_prism_gdd$amount == max(present_prism_gdd$amount), ]$correction))
 				
-				forecast_gdd <-max(weather_data()[weather_data()$time == "present" & weather_data()$quality == "forecast" & weather_data()$measurement == "gdd_cumsum", ]$amount)
+				forecast_gdd <- weather_data()[weather_data()$time == "present" & weather_data()$quality == "forecast" & weather_data()$measurement == "gdd_cumsum", ]
+				forecast_gdd <-max(forecast_gdd[forecast_gdd$amount == max(forecast_gdd$amount), ]$amount)
 				
 				max_dates <- weather_data() %>% 
 				  group_by(quality) %>% 
@@ -515,7 +524,7 @@ initial_outputs_gs_server <- function(id,
 			})
 			
 			output$reactive_growth_stage <- renderUI({
-			  HTML(paste("<h5>The majority of the seasonal N uptake in a wheat crop happens between tillering and flowering. During these stages of growth there is rapid N uptake - making this an important time to keep track of plant N status. The graphs show the relationship between time and N uptake as well as time and <a href = 'http://ipm.ucanr.edu/WEATHER/ddconcepts.html' target='_blank'>growing degree days</a> and seasonal water.", "<br></br>", "<strong>At " , growth_stage_estimate(input$growth_stage_user_input)," N uptake is estimates to be ", round(gdd_to_nuptake(feekes_to_gdd(input$growth_stage_user_input)), 0), "% of seasonal total.</strong></h5>"))
+			  HTML(paste("<h5>The majority of the seasonal N uptake in a wheat crop happens between tillering and flowering. During these stages of growth there is rapid N uptake - making this an important time to keep track of plant N status. The graphs show the relationship between time and N uptake as well as time and <a href = 'http://ipm.ucanr.edu/WEATHER/ddconcepts.html' target='_blank'>growing degree days</a> and seasonal water.", "<br></br>", "<strong>At " , growth_stage_estimate(input$growth_stage_user_input)," N uptake is estimated to be ", round(gdd_to_nuptake(feekes_to_gdd(input$growth_stage_user_input)), 0), "% of seasonal total.</strong></h5>"))
 			})
 
 
