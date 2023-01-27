@@ -28,6 +28,7 @@ app_ui <- function(request) {
     height:200px;"),color = waiter::transparent(.5)),
         shinyjs::extendShinyjs("www/app-shinyjs.js", functions = c("updateHistory")),
         tags$head(
+          tags$style(HTML(".not_bold label {font-weight:normal;}")),
           tags$style("#shiny-modal img { max-width: 100%; }"),
           tags$link(rel = "stylesheet", type = "text/css", href = "css/slider.css"),
           tags$link(rel = "stylesheet", type = "text/css", href = "css/graph_legends.css"),

@@ -106,6 +106,7 @@ map_mod_server <- function(id, api_key, shapefile_path, region_behavior, default
 				rd <- region_data(shapefile = shapefile,
 													markers = data.frame(lat = input$map_marker_drag$lat,
 																							 lon = input$map_marker_drag$lon))
+				
 
 				if(nrow(rd) == 0){
 					showNotification("Error: no data for this location - moving point to default location!", id = "region_error")
@@ -126,6 +127,7 @@ map_mod_server <- function(id, api_key, shapefile_path, region_behavior, default
 											 type = "drag")
 					}
 				}
+				
 
 
 			})
@@ -181,14 +183,14 @@ map_mod_server <- function(id, api_key, shapefile_path, region_behavior, default
 				} else {
 
 					rd <- region_data(shapefile = shapefile,
-														markers = data.frame(lat = input$map_geolocation$lat,
-																								 lon = input$map_geolocation$lon))
+														markers = data.frame(lat = as.numeric(input$map_geolocation$lat),
+																								 lon = as.numeric(input$map_geolocation$lon)))
 
 					current_markers <- region_behavior(shapefile = shapefile,
 																						 region_data = rd,
 																						 current_markers = current_markers,
-																						 testing_markers = data.frame(lat = input$map_geolocation$lat,
-																						 														 lon = input$map_geolocation$lon))
+																						 testing_markers = data.frame(lat = as.numeric(input$map_geolocation$lat),
+																						 														 lon = as.numeric(input$map_geolocation$lon)))
 
 					if(length(current_markers$region) == 1){
 					update_map(markers = current_markers,
@@ -196,6 +198,15 @@ map_mod_server <- function(id, api_key, shapefile_path, region_behavior, default
 										 type = "geolocation")
 					} else {
 						showNotification("Error: no data for this location - moving point to default location!", id = "region_error")
+					  rd <- region_data(shapefile = shapefile,
+					                    markers = data.frame(lat = default_lat,
+					                                         lon = default_lon))
+					  
+					  current_markers <- region_behavior(shapefile = shapefile,
+					                                     region_data = rd,
+					                                     current_markers = current_markers,
+					                                     testing_markers = data.frame(lat = default_lat,
+					                                                                  lon = default_lon))
 					}
 
 

@@ -15,3 +15,16 @@ reverseValue <- function(value) {
   else if(value > 10.5 & value <= 11) { return( 12 + ((value - 10.5) * 2)) }
   else if(value > 11 & value <= 11.4) { return( 13 + ((value - 11) * 2.5) ) }
 }
+
+
+hline <- function(y = 0, color = "black") {
+  list(
+    type = "line",
+    x0 = 0,
+    x1 = 1,
+    xref = "paper",
+    y0 = y,
+    y1 = y,
+    line = list(color = color, dash = "dot")
+  )
+}

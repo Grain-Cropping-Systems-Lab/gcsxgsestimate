@@ -1,12 +1,23 @@
-initial_outputs_gs_ui <- function(id, label = "IO") {
+initial_outputs_gs_ui <- function(id, map_outputs, label = "IO") {
 	ns <- NS(id)
 	tabItem(tabName = "initial_outputs",
 					fluidRow(
+					  column(6,
+					         box(title = p("Growth Stage"), solidHeader = TRUE, status = "primary", width = 12,
+					             fluidRow(column(12, htmlOutput(ns("growth_stage_name")))),
+					             fluidRow(column(12, img(src="www/growth_stages_linear.png", class="img-responsive"))),
+					             fluidRow(column(12, class = 'slider-container', shinyWidgets::noUiSliderInput(inputId = ns("growth_stage_user_input"), label = NULL, color = "#005fae", min = 0, max = 14, value = 0, step = 0.1))),
+					         )
+					  ),
 						column(6,
-									 box(title = p("Seasonal Precipitation & N Uptake"),
+									 box(title = p("Seasonal Growth and Precipitation", actionLink(ns("gdd_info"), label = "", icon = icon("info-circle"), class = "btn-info")),
 									 		solidHeader = TRUE,
 									 		status = "primary",
 									 		width = 12,
+									 		fluidRow(
+									 		  column(12, htmlOutput(ns("reactive_growth_stage"))
+									 		         )
+									 		),
 									 		fluidRow(
 									 			column(12,
 									 						 valueBoxOutput(ns("rainfall"), width = 6),
@@ -16,7 +27,7 @@ initial_outputs_gs_ui <- function(id, label = "IO") {
 									 		fluidRow(
 									 			column(12,
 									 			       conditionalPanel(
-									 			         condition = "input.which_plot == 'Cumlative GDD'", ns = ns,
+									 			         condition = "input.which_plot == 'Growth Stage Estimate'", ns = ns,
 									 			         plotly::plotlyOutput(ns("gdd_plotly")) %>% shinycssloaders::withSpinner(type = 6, color="#005fae")
 									 			       ),
 									 						 conditionalPanel(
@@ -31,9 +42,7 @@ initial_outputs_gs_ui <- function(id, label = "IO") {
 									 		),
 									 		fluidRow(
 									 			column(12,
-									 						 radioButtons(ns("which_plot"),"",
-									 						 						 choices = c("N uptake/Precip. (%)", "Cumlative GDD", "Seasonal Water (in.)"),
-									 						 						 selected = "N uptake/Precip. (%)", inline = TRUE)
+									 						   uiOutput(outputId = ns("which_plot"))
 									 			)
 									 		),
 									 		fluidRow(
@@ -41,18 +50,9 @@ initial_outputs_gs_ui <- function(id, label = "IO") {
 									 						 downloadButton(ns("downloadCSV"), "Download CSV")
 									 			)
 									 		)
-									 )
 									 ),
-						column(6,
-									 box(title = p("Growth Stage"), solidHeader = TRUE, status = "primary", width = 12,
-									 		fluidRow(column(12, htmlOutput(ns("growth_stage_name")))),
-									 		fluidRow(column(12, img(src="www/growth_stages_linear.png", class="img-responsive"))),
-									 		fluidRow(column(12, class = 'slider-container', shinyWidgets::noUiSliderInput(inputId = ns("growth_stage_user_input"), label = NULL, color = "#005fae", min = 0, max = 14, value = 0, step = 0.1))),
-													 ),
-									 br(),
-									 shinyBS::bsButton(ns("back_to_location"), label = "Back", block = TRUE, style="default", size = "lg")#,
-									 #bsButton(ns("to_ssms"), label = "Next", block = TRUE, style="default", size = "lg")
-						))
+									 shinyBS::bsButton(ns("back_to_location"), label = "Back", block = TRUE, style="default", size = "lg")
+									 ))
 	)
 }
 
@@ -73,17 +73,43 @@ initial_outputs_gs_server <- function(id,
 			max_prism_date <- DBI::dbGetQuery(con, "SELECT DISTINCT(date) FROM grain.prism WHERE quality != 'forecast' ORDER BY date DESC LIMIT 1;")
 
 			observe({
+			 
 				if(nrow(req(prelim_weather_data())) > 0){
 
 				if(req(map_outputs()$nuptakemod) == FALSE){
 				  shinyWidgets::updateNoUiSliderInput(session = parent, inputId = ns("growth_stage_user_input"), value = reverseValue(growth_stage_option()))
 				} else {
-					val <- round(gdd_to_feekes(max(isolate(prelim_weather_data())[isolate(prelim_weather_data())$quality != "forecast" & isolate(prelim_weather_data())$time == "present" & isolate(prelim_weather_data())$measurement == "gdd_cumsum", "amount"], na.rm = TRUE)), 1)
+				  
+				  present_prism_gdd <- weather_data()[weather_data()$time == "present" & weather_data()$quality == "prism" & weather_data()$measurement == "gdd_cumsum", ]
+				  
+				  val <- gdd_to_feekes((present_prism_gdd[present_prism_gdd$amount == max(present_prism_gdd$amount), ]$amount)*(present_prism_gdd[present_prism_gdd$amount == max(present_prism_gdd$amount), ]$correction))
+				  
+#					val <- round(gdd_to_feekes(max(isolate(prelim_weather_data())[isolate(prelim_weather_data())$quality != #"forecast" & isolate(prelim_weather_data())$time == "present" & isolate(prelim_weather_data())$measurement == #"gdd_cumsum", "amount"], na.rm = TRUE)), 1)
 					
 					shinyWidgets::updateNoUiSliderInput(parent, inputId = ns("growth_stage_user_input"), value = reverseValue(val))
 				}
 
 				}
+			})
+			
+			observeEvent(input$gdd_info, {
+			  showModal(
+			    modalDialog(title = "Climate measurements",
+			                p("Climate data for each location was obtained from the PRISM Climate Group (PRISM Climate Group, 2021). Cumulative precipitation and growing degree-days from sowing are estimated for each location and compared to 10-year means. Degree-days were estimated using the corrected single triangle method. Temperature thresholds of 87°F (30°C) and 44°F (7°C) were used.")
+			    )
+			  )
+			})
+			
+			output$which_plot <- renderUI({
+			  if(map_outputs()$nuptakemod == TRUE){
+			  radioButtons(session$ns("which_plot"),label = "",
+			               choices = c("Growth Stage Estimate", "N uptake/Precip. (%)", "Seasonal Water (in.)"),
+			               selected = "Growth Stage Estimate", inline = TRUE)
+			  } else {
+			    radioButtons(session$ns("which_plot"),label = "",
+			                 choices = c("Growth Stage Estimate", "Seasonal Water (in.)"),
+			                 selected = "Growth Stage Estimate", inline = TRUE)
+			  }
 			})
 
 			daterange_full <- reactive({
@@ -180,9 +206,6 @@ initial_outputs_gs_server <- function(id,
 #												 new_days = num_days*days_adjust,
 #												 date = min_date() + new_days)
 #								
-#								print("test bug")
-#								
-#								print(as.data.frame(wd_temp$gdd_cumsum*adjustment_factor))
 #								
 #								wd_temp$feekes <- apply(as.data.frame(wd_temp$gdd_cumsum*adjustment_factor), 1, gdd_to_feekes)
 #								
@@ -446,47 +469,72 @@ initial_outputs_gs_server <- function(id,
 				}
 
 			})
-
+			
 			output$downloadCSV <- downloadHandler(
 
 				filename = function() {
 					paste0("weather_data_", "lat_", map_outputs()$lat, "_long_", map_outputs()$lon, "_", daterange_full()[1], "_", daterange_full()[2], ".csv")
 				},
 				content = function(file) { write.csv(x = prelim_weather_data() %>%
-																						 	filter(measurement == 'ppt' | measurement == 'tmax' | measurement == 'tmin') %>%
-																						 	mutate(key = if_else(measurement == "ppt", paste(measurement, time, "in", sep = "_"),
-																						 											 paste(measurement, time, "F", sep = "_")),
-																						 				 data_type = if_else(quality == "prism", "current", quality),
-																						 				 amount = if_else(measurement == "ppt", amount/25.4, amount)) %>%
-																						 	select(-measurement, - time, -quality, -data_type) %>%
-																						 	tidyr::spread(key = key, value = amount),
+				                                       select(-correction) %>% 
+				                                       filter(measurement == 'ppt' | 
+				                                                measurement == 'tmax' | 
+				                                                measurement == 'tmin' | 
+				                                                measurement == 'gdd') %>%
+				                                       mutate(key = if_else(measurement == "ppt",
+				                                                            paste(measurement, time, "in", sep = "_"),
+				                                                            if_else(measurement == "tmax" | measurement == "tmin",
+				                                                                    paste(measurement, time, "F", sep = "_"), 
+				                                                                    paste(measurement, time, sep = "_"))),
+				                                              data_type = if_else(quality == "prism", "current", quality),
+				                                              amount = if_else(measurement == "ppt", amount/25.4, amount)) %>%
+				                                       select(-measurement, - time, -quality, -data_type) %>%
+				                                       tidyr::spread(key = key, value = amount),
 																						 file, row.names = FALSE) }
 			)
 
 			output$growth_stage_name <- renderUI({
-
-				feekes_current <- gdd_to_feekes(max(weather_data()[weather_data()$time == "present" & weather_data()$quality == "prism" & weather_data()$measurement == "gdd_cumsum", ]$amount))
-
-				if (input$growth_stage_user_input < 2.5 | input$growth_stage_user_input > 10.3){
-					HTML(paste("<h5>Your <a href = 'https://anrcatalog.ucanr.edu/pdf/8165.pdf' target='_blank'>growth stage</a> is estimated to be <strong style='color:Tomato;'>",
-										 growth_stage_estimate(feekes_current),
-										 ".</strong> The growth stage is the most advanced growth stage that 50% of plants in the field have reached. Make adjustments to the estimated crop growth stage below if you want to change the seasonal N uptake estimate.", sep = ""))
+			  
+			  present_prism_gdd <- weather_data()[weather_data()$time == "present" & weather_data()$quality == "prism" & weather_data()$measurement == "gdd_cumsum", ]
+			  
+				feekes_current <- gdd_to_feekes((present_prism_gdd[present_prism_gdd$amount == max(present_prism_gdd$amount), ]$amount)*(present_prism_gdd[present_prism_gdd$amount == max(present_prism_gdd$amount), ]$correction))
+				
+				forecast_gdd <- weather_data()[weather_data()$time == "present" & weather_data()$quality == "forecast" & weather_data()$measurement == "gdd_cumsum", ]
+				forecast_gdd <-max(forecast_gdd[forecast_gdd$amount == max(forecast_gdd$amount), ]$amount)
+				
+				max_dates <- weather_data() %>% 
+				  group_by(quality) %>% 
+				  summarize(max(date)) %>% 
+				  tidyr::pivot_wider(names_from = quality, values_from = `max(date)`)
+				
+				if("forecast" %in% names(max_dates)){
+				  
+				  time_diff <- max_dates %>% 
+				    mutate(diff = forecast - prism) %>% 
+				    pull(diff) %>% 
+				    as.numeric()
+				  
+				  feekes_forecast <- gdd_to_feekes(forecast_gdd)
+				  
+				  HTML(paste("<h5>Your <a href = 'https://anrcatalog.ucanr.edu/pdf/8165.pdf' target='_blank'>growth stage</a> is estimated to be <strong>",
+				             growth_stage_estimate(feekes_current),
+				             ".</strong> Your growth stage forecasted to be <strong>",  growth_stage_estimate(feekes_forecast), "</strong> in ",  time_diff , " days (", ifelse(substr(max_dates$forecast, 6, 6) == 0,
+				                                                                                                                                                                stringr::str_replace(substr(max_dates$forecast, 7, 10), "-", "/"),
+				                                                                                                                                                                stringr::str_replace(substr(max_dates$forecast, 6, 10), "-", "/")), "). The growth stage is the most advanced growth stage that 50% of plants in the field have reached. Make adjustments to the estimated crop growth stage below if you want to change the seasonal N uptake estimate.</h5>", sep = ""))
+				  
 				} else {
-					HTML(paste("<h5>Your <a href = 'https://anrcatalog.ucanr.edu/pdf/8165.pdf' target='_blank'>growth stage</a> is estimated to be <strong>",
-										 growth_stage_estimate(feekes_current),
-										 ".</strong> The growth stage is the most advanced growth stage that 50% of plants in the field have reached. Make adjustments to the estimated crop growth stage below if you want to change the seasonal N uptake estimate.</h5>", sep = ""))
+				  
+				  HTML(paste("<h5>Your <a href = 'https://anrcatalog.ucanr.edu/pdf/8165.pdf' target='_blank'>growth stage</a> is estimated to be <strong>",
+				             growth_stage_estimate(feekes_current),
+				             ".</strong> The growth stage is the most advanced growth stage that 50% of plants in the field have reached. Make adjustments to the estimated crop growth stage below if you want to change the seasonal N uptake estimate.</h5><br></br>", sep = ""))
 				}
-
-
+				
+			})
+			
+			output$reactive_growth_stage <- renderUI({
+			  HTML(paste("<h5>The majority of the seasonal N uptake in a wheat crop happens between tillering and flowering. During these stages of growth there is rapid N uptake - making this an important time to keep track of plant N status. The graphs show the relationship between time and N uptake as well as time and <a href = 'http://ipm.ucanr.edu/WEATHER/ddconcepts.html' target='_blank'>growing degree days</a> and seasonal water.", "<br></br>", "<strong>At " , growth_stage_estimate(input$growth_stage_user_input)," N uptake is estimated to be ", round(gdd_to_nuptake(feekes_to_gdd(input$growth_stage_user_input)), 0), "% of seasonal total.</strong></h5>"))
 			})
 
-			observeEvent(input$to_ssms, {
-
-				if(input$growth_stage_user_input >= 2.5 & input$growth_stage_user_input <= 10.3){
-					updateTabItems(parent, "tabs", "site_measures")
-				}
-
-			})
 
 	}) # end of observe
 
@@ -507,6 +555,7 @@ initial_outputs_gs_server <- function(id,
 	})
 	
 	observeEvent(input$back_to_location, {
+	  print("going back")
 		updateTabItems(parent, "tabs", "location")
 	})
 

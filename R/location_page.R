@@ -24,8 +24,8 @@ range is limited to one ", actionLink(ns("actionlink"), "wheat growing season"),
 									 								 		br()
 									 								 )),
 									 conditionalPanel(condition = "!output.nuptake_panel",
-									 								 box(title = p("Crop Variety"), solidHeader = TRUE, status = "primary", width = 12,
-									 		p("Choose the crop type or variety (if known) for the field of interest."),
+									 								 box(title = p("Crop Type"), solidHeader = TRUE, status = "primary", width = 12,
+									 		#p("Choose the crop type for the field of interest."),
 									 		uiOutput(outputId = ns("variety")))),
 									 box(title = p("Irrigation"), solidHeader = TRUE, status = "primary", width = 12,
 									 		checkboxInput(ns("moisture"), "This field was planted into moisture or irrigated up.", value = FALSE),
@@ -50,7 +50,6 @@ range is limited to one ", actionLink(ns("actionlink"), "wheat growing season"),
 									 		#p("If you are satisfied with the information you entered and are ready to gather your site-specific data, click 'Next' below."),
 
 						),
-						shinyBS::bsButton(ns("back_to_landing"), label = "Back", block = TRUE, style="default", size = "lg"),
 						shinyBS::bsButton(ns("switchtab"), label = "Next", block = TRUE, style="default", size = "lg")
 						)
 					)
@@ -72,7 +71,9 @@ location_page_server <- function(id, parent, con, api_key){
 			
 			max_prism_date <- DBI::dbGetQuery(con, "SELECT DISTINCT(date) FROM grain.prism WHERE quality != 'forecast' ORDER BY date DESC LIMIT 1;")
 			
-			variety_list <- readr::read_csv("data/rel_gdd_crop_type.csv") 
+			variety_list <- readr::read_csv("data/rel_gdd_crop_type.csv") %>% 
+			  mutate(crop_sub_type = if_else(crop_sub_type == "COMMON", "Common wheat", 
+			                                 if_else(crop_sub_type == "DURUM", "Durum wheat", "Triticale")))
 			
 			output$daterange <- renderUI({
 			  dateRangeInput(session$ns('daterange'), label = "", format = 'mm/dd/yyyy',
@@ -149,7 +150,7 @@ location_page_server <- function(id, parent, con, api_key){
 			})
 			
 			output$variety <- renderUI({
-			  selectInput(inputId = session$ns("variety"), label = "", choices = unique(variety_list$crop_sub_type), selected = "COMMON")
+			  div(radioButtons(inputId = session$ns("variety"), label = "Choose the crop type for the field of interest.", choices = unique(variety_list$crop_sub_type), selected = "Common wheat"), class = "not_bold")
 			})
 
 			output$growingSeasonImage <- renderImage({
@@ -186,8 +187,6 @@ location_page_server <- function(id, parent, con, api_key){
 																					amount = numeric()))
 
 			observeEvent(input$switchtab, {
-			  
-			  print("step 1")
 
 				if (input$irrigation == 1){
 					for (i in seq(1, input$numIrr)){
@@ -201,22 +200,17 @@ location_page_server <- function(id, parent, con, api_key){
 						amount <- ifelse(length(input[[paste0("Irrigation", i)]]) == 0,
 														 0,
 														 input[[paste0("Irrigation", i)]])
-
-						#irrigation(bind_rows(irrigation(), data.frame(date = date, amount = amount)))
-						irrigation(data.frame(date = date, amount = amount))
+ # note the way this works has changed in different versions of packages - a source of error in irrigation several times
+						irrigation(bind_rows(irrigation(), data.frame(date = date, amount = amount)))
+						#irrigation(data.frame(date = date, amount = amount))
 					}
 
 				}
-			  
-			  print("step 2")
 
 				irrigation_check <- !any(irrigation()$amount < 0 | irrigation()$amount > 12)
 				if(irrigation_check == FALSE){
 					showNotification("Error: Irrigation amounts out of bounds!", id = "irrigation_error")
 				}
-				
-				print("step 3")
-				print(irrigation_check)
 				
 				date_check <- check_dates(daterange = input$daterange,
 																	irrigation_input = input$irrigation,
@@ -224,14 +218,9 @@ location_page_server <- function(id, parent, con, api_key){
 																	region = map_outputs$region,
 																	max_prism_date = max_prism_date)
 				
-				print(date_check)
-				
 				
 				
 				if(date_check == TRUE & irrigation_check == TRUE){
-				  
-				  print(map_outputs$lat)
-				  print(map_outputs$lon)
 				  
 				  shinyBS::updateButton(parent, inputId = "switchtab", label = "Next", block = TRUE, style="default", size = "lg", disabled = TRUE)
 				  
@@ -269,7 +258,7 @@ location_page_server <- function(id, parent, con, api_key){
 				    
 				    incProgress(10)
 				    
-				    present_data <- prism_date_range_all(con = con, lat = map_outputs$lat, long = map_outputs$lon, from_date = input$daterange[1], to_date = input$daterange[2])
+				    present_data <- prism_date_range_all(con = con, lat = map_outputs$lat, long = map_outputs$lon, from_date = input$daterange[1], to_date = input$daterange[2]) 
 				    
 				    # remove forecast data that overlaps with PRISM data and NA's
 				    removes <- present_data %>%
@@ -278,6 +267,7 @@ location_page_server <- function(id, parent, con, api_key){
 				      filter(quality == "forecast")
 				    
 				    present_data <- anti_join(present_data, removes) %>% # recalculate cumulative sums in case there was a failed data point in PRISM or forecast
+				      tidyr::drop_na() %>% # clean data so that is there are NA's they are dropped 
 				      mutate(precip_cumsum = cumsum(ppt),
 				             gdd_cumsum = cumsum(gdd),
 				             nuptake_perc = gdd_to_nuptake(gdd_cumsum),
@@ -286,17 +276,27 @@ location_page_server <- function(id, parent, con, api_key){
 				    
 				    
 				    lowset <- present_data[present_data$gdd_cumsum <= 1125,]
-				    variableset <-present_data[present_data$gdd_cumsum > 1125,]
 				    
 				    lowset$correction <- (variety_list %>% 
 				                            filter(group == 1000) %>% 
 				                            filter(crop_sub_type == input$variety))$relative_gs
-				    
-				    variableset$correction <- apply(as.matrix(variableset$gdd_cumsum), 1, FUN = gs_correction, crop_type = input$variety, gd_rel_gdds_input = variety_list)
-				    
-				    present_data <- bind_rows(lowset, variableset) %>% 
-				      mutate(nuptake_perc = gdd_to_nuptake(gdd_cumsum*correction)) %>%
-				      tidyr::drop_na()
+
+				    if(max(present_data$gdd_cumsum) > 1125){
+				      variableset <-present_data[present_data$gdd_cumsum > 1125,]
+				      variableset$correction <- apply(as.matrix(variableset$gdd_cumsum), 1, FUN = gs_correction, crop_type = input$variety, gd_rel_gdds_input = variety_list)
+				      
+				      present_data <- bind_rows(lowset, variableset) %>% 
+				        mutate(nuptake_perc = gdd_to_nuptake(gdd_cumsum*correction)) %>%
+				        tidyr::drop_na()
+				      
+				      print(names(present_data))
+				    } else {
+				      present_data <- lowset %>% 
+				        mutate(nuptake_perc = gdd_to_nuptake(gdd_cumsum*correction)) %>%
+				        tidyr::drop_na()
+				      
+				      print(names(present_data))
+				    }
 				    
 				    shinyBS::updateButton(session, inputId = "switchtab", label = "Next", block = TRUE, style="default", size = "lg", disabled = FALSE)
 				  }) # end of progress bar tracking
@@ -406,10 +406,12 @@ location_page_server <- function(id, parent, con, api_key){
 				    select(-pseudo_date) %>%
 				    tidyr::gather(measurement, amount, -date, -month, -day, -time, -quality)
 				  
+				  print('PRESENT DATA CHECK')
+				  print(names(present_data))
 				  present_data_long <- present_data %>%
 				    mutate(time = "present",
 				           quality = if_else(quality == "forecast", "forecast", "prism")) %>%
-				    tidyr::gather(measurement, amount, -date, -month, -day, -time, -quality)
+				    tidyr::gather(measurement, amount, -date, -month, -day, -time, -quality, -correction) # carry correction through
 				  
 				  bind_data(data.frame(date = as.Date(character()), month = numeric(),
 				                       day = numeric(), quality = character(),
@@ -417,18 +419,15 @@ location_page_server <- function(id, parent, con, api_key){
 				                       amount = numeric()))
 				  bind_data(bind_rows(bind_data(), present_data_long, historical_data_long))
 				  
+				  print("NAMES OF BIND DATA")
+				  print(head(bind_data()))
+				  
 				}
-				
-				print("step 4")
-				
 				
 				shinyjs::runjs(autoscroll_to_anchor)
 
 			})
 
-			observeEvent(input$back_to_landing, {
-				updateTabItems(parent, "tabs", "landing_page")
-			})
 
 			return(list(map_outputs = reactive({map_outputs}),
 									growth_stage_option = reactive({input$growth_stage_user_input_1}),
