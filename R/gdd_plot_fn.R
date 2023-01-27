@@ -35,7 +35,9 @@ graph_gdd_plotly <- function(weather_data, lat, long, nuptake_mod, con) {
 	  filter(growth_stage != "NA") %>% 
 	  group_by(growth_stage) %>% 
 	  summarize(min = min(gdd_cumsum),
-	            max = max(gdd_cumsum)) %>% 
+	            max = max(gdd_cumsum))
+	
+	gs_ranges <- gs_ranges %>% 
 	  mutate(max = if_else(growth_stage == "maturity", 
 	                       gs_ranges$min[2] + (gs_ranges$max[1] - gs_ranges$min[1]),
 	                       max)) %>% 
