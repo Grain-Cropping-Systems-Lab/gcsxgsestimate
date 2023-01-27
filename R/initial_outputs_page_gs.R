@@ -10,7 +10,7 @@ initial_outputs_gs_ui <- function(id, map_outputs, label = "IO") {
 					         )
 					  ),
 						column(6,
-									 box(title = p("Seasonal Precipitation & N Uptake", actionLink(ns("gdd_info"), label = "", icon = icon("info-circle"), class = "btn-info")),
+									 box(title = p("Seasonal Growth and Precipitation", actionLink(ns("gdd_info"), label = "", icon = icon("info-circle"), class = "btn-info")),
 									 		solidHeader = TRUE,
 									 		status = "primary",
 									 		width = 12,

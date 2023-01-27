@@ -36,6 +36,9 @@ graph_gdd_plotly <- function(weather_data, lat, long, nuptake_mod, con) {
 	  group_by(growth_stage) %>% 
 	  summarize(min = min(gdd_cumsum),
 	            max = max(gdd_cumsum)) %>% 
+	  mutate(max = if_else(growth_stage == "maturity", 
+	                       gs_ranges$min[2] + (gs_ranges$max[1] - gs_ranges$min[1]),
+	                       max)) %>% 
 	  mutate(average = (min + max)/2)
 	
 	                                                               
@@ -149,15 +152,13 @@ graph_gdd_plotly <- function(weather_data, lat, long, nuptake_mod, con) {
 
 	fig <- fig %>% plotly::layout(title = plot_title,
 	                              font = list(size = 11),
-	                              shapes = list(hline(gs_ranges$min[2]), hline(gs_ranges$max[2]), hline(gs_ranges$min[1]), hline(gs_ranges$max[1]), 
-	                                            list(type = "rect",
-	                                                 fillcolor = "green", line = list(color = "green"), opacity = 0.2,
-	                                                 y0 = gs_ranges$min[3], y1 = gs_ranges$max[3], x0 = min(data$date), x1 = max(data$date))),
+	                              shapes = list(hline(gs_ranges$min[2]),
+	                                            hline(gs_ranges$max[2]), hline(gs_ranges$min[1]), hline(gs_ranges$max[1]), hline(gs_ranges$min[3]), hline(gs_ranges$max[3])),
 	                              xaxis = list(title = F, tickfont = tick_font, titlefont = title_font), 
 	                              yaxis = list(range = c(min(data$amount), 2000), title = "Cumulative GDD", tickfont = tick_font, titlefont = title_font),
 												margin = list(l = 50, r = 50, b = 0, t = 25),
 												showlegend = T, legend = list(orientation = 'h', y = -0.25)) %>% 
-	  plotly::add_text(showlegend = FALSE, x = c(min(data$date)+20,min(data$date)+20, min(data$date)+20), y = c(gs_ranges$average[3],gs_ranges$average[1],gs_ranges$min[2] + mean(gs_ranges$max[3] - gs_ranges$min[3], gs_ranges$max[1] - gs_ranges$min[1])),
+	  plotly::add_text(showlegend = FALSE, x = c(min(data$date) + ((max(data$date) - min(data$date))/5),min(data$date) + ((max(data$date) - min(data$date))/5), min(data$date) + ((max(data$date) - min(data$date))/5)), y = c(gs_ranges$average[3],gs_ranges$average[1], gs_ranges$average[2]),
 	           text = c("tillering","heading", "maturity"))
 	
 	return(fig)
