@@ -532,7 +532,7 @@ initial_outputs_gs_server <- function(id,
 			})
 			
 			output$reactive_growth_stage <- renderUI({
-			  HTML(paste("<h5>The majority of the seasonal N uptake in a wheat crop happens between tillering and flowering. During these stages of growth there is rapid N uptake - making this an important time to keep track of plant N status. The graphs show the relationship between time and N uptake as well as time and <a href = 'http://ipm.ucanr.edu/WEATHER/ddconcepts.html' target='_blank'>growing degree days</a> and seasonal water.", "<br></br>", "<strong>At " , growth_stage_estimate(input$growth_stage_user_input)," N uptake is estimated to be ", round(gdd_to_nuptake(feekes_to_gdd(input$growth_stage_user_input)), 0), "% of seasonal total.</strong></h5>"))
+			  HTML(paste("<h5>The graphs show the relationship between time, crop growth stage, N uptake, and seasonal water. Estimates of growth stage and N uptake reflect relationships between time and <a href = 'http://ipm.ucanr.edu/WEATHER/ddconcepts.html' target='_blank'>growing degree days</a>.", "<br></br>", "<strong>At " , growth_stage_estimate(input$growth_stage_user_input)," N uptake is estimated to be ", round(gdd_to_nuptake(feekes_to_gdd(input$growth_stage_user_input)), 0), "% of seasonal total.</strong></h5>"))
 			})
 
 
