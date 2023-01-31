@@ -497,7 +497,14 @@ initial_outputs_gs_server <- function(id,
 			  
 			  present_prism_gdd <- weather_data()[weather_data()$time == "present" & weather_data()$quality == "prism" & weather_data()$measurement == "gdd_cumsum", ]
 			  
-				feekes_current <- gdd_to_feekes((present_prism_gdd[present_prism_gdd$amount == max(present_prism_gdd$amount), ]$amount)*(present_prism_gdd[present_prism_gdd$amount == max(present_prism_gdd$amount), ]$correction))
+			  
+			  if(req(map_outputs()$nuptakemod) == FALSE){
+			   feekes_current <- reverseValue(growth_stage_option())
+			  } else {
+			    
+			    feekes_current <- gdd_to_feekes((present_prism_gdd[present_prism_gdd$amount == max(present_prism_gdd$amount), ]$amount)*(present_prism_gdd[present_prism_gdd$amount == max(present_prism_gdd$amount), ]$correction))
+			    
+			  }
 				
 				forecast_gdd <- weather_data()[weather_data()$time == "present" & weather_data()$quality == "forecast" & weather_data()$measurement == "gdd_cumsum", ]
 				forecast_gdd <-max(forecast_gdd[forecast_gdd$amount == max(forecast_gdd$amount), ]$amount)

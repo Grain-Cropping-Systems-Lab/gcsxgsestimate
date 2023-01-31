@@ -28,7 +28,7 @@ graph_gdd_plotly <- function(weather_data, lat, long, nuptake_mod, con) {
 	gs_ranges <-	weather_data %>% 
 	  filter(time == "historical", 
 	         measurement == "feekes" | measurement == "gdd_cumsum") %>% 
-	  tidyr::pivot_wider(names_from = measurement, values_from = amount, -correction) %>% 
+	  tidyr::pivot_wider(names_from = measurement, values_from = amount) %>% 
 	  mutate(growth_stage = if_else(feekes >= 3 & feekes < 6, "tillering",
 	                                if_else(feekes >= 10.1 & feekes < 10.5, "heading",
 	                                        if_else(feekes == 11.4, "maturity", "NA")))) %>% 
