@@ -107,8 +107,8 @@ initial_outputs_gs_server <- function(id,
 			               selected = "Growth Stage Estimate", inline = TRUE)
 			  } else {
 			    radioButtons(session$ns("which_plot"),label = "",
-			                 choices = c("Growth Stage Estimate", "Seasonal Water (in.)"),
-			                 selected = "Growth Stage Estimate", inline = TRUE)
+			                 choices = c("Seasonal Water (in.)"),
+			                 selected = "Seasonal Water (in.)", inline = TRUE)
 			  }
 			})
 
@@ -497,7 +497,14 @@ initial_outputs_gs_server <- function(id,
 			  
 			  present_prism_gdd <- weather_data()[weather_data()$time == "present" & weather_data()$quality == "prism" & weather_data()$measurement == "gdd_cumsum", ]
 			  
-				feekes_current <- gdd_to_feekes((present_prism_gdd[present_prism_gdd$amount == max(present_prism_gdd$amount), ]$amount)*(present_prism_gdd[present_prism_gdd$amount == max(present_prism_gdd$amount), ]$correction))
+			  
+			  if(req(map_outputs()$nuptakemod) == FALSE){
+			   feekes_current <- reverseValue(growth_stage_option())
+			  } else {
+			    
+			    feekes_current <- gdd_to_feekes((present_prism_gdd[present_prism_gdd$amount == max(present_prism_gdd$amount), ]$amount)*(present_prism_gdd[present_prism_gdd$amount == max(present_prism_gdd$amount), ]$correction))
+			    
+			  }
 				
 				forecast_gdd <- weather_data()[weather_data()$time == "present" & weather_data()$quality == "forecast" & weather_data()$measurement == "gdd_cumsum", ]
 				forecast_gdd <-max(forecast_gdd[forecast_gdd$amount == max(forecast_gdd$amount), ]$amount)
@@ -532,7 +539,11 @@ initial_outputs_gs_server <- function(id,
 			})
 			
 			output$reactive_growth_stage <- renderUI({
+			  if(map_outputs()$nuptakemod == TRUE){
 			  HTML(paste("<h5>The graphs show the relationship between time, crop growth stage, N uptake, and seasonal water. Estimates of growth stage and N uptake reflect relationships between time and <a href = 'http://ipm.ucanr.edu/WEATHER/ddconcepts.html' target='_blank'>growing degree days</a>.", "<br></br>", "<strong>At " , growth_stage_estimate(input$growth_stage_user_input)," N uptake is estimated to be ", round(gdd_to_nuptake(feekes_to_gdd(input$growth_stage_user_input)), 0), "% of seasonal total.</strong></h5>"))
+			  } else {
+			    HTML(paste("<h5>The graph shows the relationship between time and seasonal water.", "<br></br>", "<strong>At " , growth_stage_estimate(input$growth_stage_user_input)," N uptake is estimated to be ", round(gdd_to_nuptake(feekes_to_gdd(input$growth_stage_user_input)), 0), "% of seasonal total.</strong></h5>"))
+			  }
 			})
 
 
