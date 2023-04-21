@@ -65,11 +65,11 @@ location_page_server <- function(id, parent, con, api_key){
 			
 			max_forecast_date <- DBI::dbGetQuery(con, "SELECT DISTINCT(date) FROM grain.prism WHERE quality = 'forecast' ORDER BY date DESC LIMIT 1;")
 			
+			max_prism_date <- DBI::dbGetQuery(con, "SELECT DISTINCT(date) FROM grain.prism WHERE quality != 'forecast' ORDER BY date DESC LIMIT 1;")
+			
 			max_forecast_date <- if(length(max_forecast_date$date) == 0) {
 			  max_prism_date
 			} 
-			
-			max_prism_date <- DBI::dbGetQuery(con, "SELECT DISTINCT(date) FROM grain.prism WHERE quality != 'forecast' ORDER BY date DESC LIMIT 1;")
 			
 			variety_list <- readr::read_csv("data/rel_gdd_crop_type.csv") %>% 
 			  mutate(crop_sub_type = if_else(crop_sub_type == "COMMON", "Common wheat", 
