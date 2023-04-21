@@ -1,6 +1,6 @@
 # The Crop Growth Stage and Forecasting Web-Tool
 
-The growth stage of a crop is a critical piece of information for growers and agronomists. For small grain crops like wheat and triticale, many field management decisions are sensitive to the stage of crop development. These include irrigation, fertilizer additions, herbicide and pesticide applications, and harvest timing. In addition, the planting date, the amount and timing of rainfall and/or irrigation, and cumulative seasonal temperatures all impact how rapidly a crop emerges, develops and matures. Because of the extreme variability in winter rainfall in the state, rates of development for small grain crops in California are not always consistent from year-to-year and farm-to-farm. This can make precision management and planning more difficult. This tool provides estimates of crop growth stage, and seasonal patterns of nitrogen (N) and water use. Users can compare the current season to historical averages and see how forecasted conditions may impact near-term crop growth and development.
+The growth stage of a crop is a critical piece of information for growers and agronomists. For small grain crops like wheat and triticale, many field management decisions are sensitive to the stage of crop development. These include irrigation, fertilizer additions, herbicide and pesticide applications, and harvest timing. In addition, the planting date, the amount and timing of rainfall and/or irrigation, and cumulative seasonal temperatures all impact how rapidly a crop emerges, develops and matures. Because of the extreme variability in winter rainfall in the state, rates of development for small grain crops in California are not always consistent from year-to-year and farm-to-farm. This can make precision management and planning more difficult. This tool provides estimates of crop growth stage, seasonal patterns of nitrogen (N) use and rainfall. Users can compare the current season to historical averages and see how forecasted conditions may impact near-term crop growth and development.
 
 The tool is available now at: https://smallgrains.ucanr.edu/General_Production_Guidelines/Crop_Growth_Stage_and_Forecasting_Tool/
 
@@ -13,6 +13,7 @@ This application uses the framework laid out by [ThinkR's golem] (https://github
 ```r
 devtools::install_github("Grain-Cropping-Systems-Lab/gcsxgsestimate")
 gcsxgsestimate::run_app()
+# gcsxgsestimate::run_app(DATABASE_URL = "", MAPS_API_KEY = "")
 ```
 
 Please open an issue if you would like to contribute. 
