@@ -13,6 +13,7 @@ This application uses the framework laid out by [ThinkR's golem] (https://github
 ```r
 devtools::install_github("Grain-Cropping-Systems-Lab/gcsxgsestimate")
 gcsxgsestimate::run_app()
+# gcsxgsestimate::run_app(DATABASE_URL = "", MAPS_API_KEY = "")
 ```
 
 Please open an issue if you would like to contribute. 

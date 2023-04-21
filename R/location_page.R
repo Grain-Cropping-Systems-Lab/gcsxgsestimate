@@ -65,9 +65,9 @@ location_page_server <- function(id, parent, con, api_key){
 			
 			max_forecast_date <- DBI::dbGetQuery(con, "SELECT DISTINCT(date) FROM grain.prism WHERE quality = 'forecast' ORDER BY date DESC LIMIT 1;")
 			
-			if (length(max_forecast_date$date) == 0){
-			  max_forecast_date <- data.frame(date = as.Date("2009-01-01"))
-			}
+			max_forecast_date <- if(length(max_forecast_date$date) == 0) {
+			  max_prism_date
+			} 
 			
 			max_prism_date <- DBI::dbGetQuery(con, "SELECT DISTINCT(date) FROM grain.prism WHERE quality != 'forecast' ORDER BY date DESC LIMIT 1;")
 			
