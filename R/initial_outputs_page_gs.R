@@ -82,7 +82,7 @@ initial_outputs_gs_server <- function(id,
 				  
 				  present_prism_gdd <- weather_data()[weather_data()$time == "present" & weather_data()$quality == "prism" & weather_data()$measurement == "gdd_cumsum", ]
 				  
-				  val <- gdd_to_feekes((present_prism_gdd[present_prism_gdd$amount == max(present_prism_gdd$amount), ]$amount)*(present_prism_gdd[present_prism_gdd$amount == max(present_prism_gdd$amount), ]$correction))
+				  val <- gdd_to_feekes((present_prism_gdd[present_prism_gdd$amount == max(present_prism_gdd$amount), ]$amount))
 				  
 #					val <- round(gdd_to_feekes(max(isolate(prelim_weather_data())[isolate(prelim_weather_data())$quality != #"forecast" & isolate(prelim_weather_data())$time == "present" & isolate(prelim_weather_data())$measurement == #"gdd_cumsum", "amount"], na.rm = TRUE)), 1)
 					
@@ -502,7 +502,7 @@ initial_outputs_gs_server <- function(id,
 			   feekes_current <- reverseValue(growth_stage_option())
 			  } else {
 			    
-			    feekes_current <- gdd_to_feekes((present_prism_gdd[present_prism_gdd$amount == max(present_prism_gdd$amount), ]$amount)*(present_prism_gdd[present_prism_gdd$amount == max(present_prism_gdd$amount), ]$correction))
+			    feekes_current <- gdd_to_feekes((present_prism_gdd[present_prism_gdd$amount == max(present_prism_gdd$amount), ]$amount))
 			    
 			  }
 				
