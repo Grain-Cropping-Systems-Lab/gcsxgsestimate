@@ -291,13 +291,11 @@ location_page_server <- function(id, parent, con, api_key){
 				        mutate(nuptake_perc = gdd_to_nuptake(gdd_cumsum*correction)) %>%
 				        tidyr::drop_na()
 				      
-				      print(names(present_data))
 				    } else {
 				      present_data <- lowset %>% 
 				        mutate(nuptake_perc = gdd_to_nuptake(gdd_cumsum*correction)) %>%
 				        tidyr::drop_na()
 				      
-				      print(names(present_data))
 				    }
 				    
 				    shinyBS::updateButton(session, inputId = "switchtab", label = "Next", block = TRUE, style="default", size = "lg", disabled = FALSE)
@@ -407,9 +405,7 @@ location_page_server <- function(id, parent, con, api_key){
 				           date = pseudo_date) %>%
 				    select(-pseudo_date) %>%
 				    tidyr::gather(measurement, amount, -date, -month, -day, -time, -quality)
-				  
-				  print('PRESENT DATA CHECK')
-				  print(names(present_data))
+
 				  present_data_long <- present_data %>%
 				    mutate(time = "present",
 				           quality = if_else(quality == "forecast", "forecast", "prism")) %>%
@@ -420,9 +416,6 @@ location_page_server <- function(id, parent, con, api_key){
 				                       time = character(), measurement = character(),
 				                       amount = numeric()))
 				  bind_data(bind_rows(bind_data(), present_data_long, historical_data_long))
-				  
-				  print("NAMES OF BIND DATA")
-				  print(head(bind_data()))
 				  
 				}
 				

@@ -37,12 +37,18 @@ graph_gdd_plotly <- function(weather_data, lat, long, nuptake_mod, con) {
 	  summarize(min = min(gdd_cumsum),
 	            max = max(gdd_cumsum))
 	
+	print(gs_ranges)
+	
 	gs_ranges <- gs_ranges %>% 
 	  mutate(max = if_else(growth_stage == "maturity", 
 	                       gs_ranges$min[2] + (gs_ranges$max[1] - gs_ranges$min[1]),
 	                       max)) %>% 
-	  mutate(average = (min + max)/2)
+	  mutate(average = (min + max)/2) %>% 
+	  right_join(data.frame(growth_stage = c("heading", "maturity", "tillering"))) %>% 
+	  mutate(growth_stage = factor(growth_stage, levels = c("heading", "maturity", "tillering"))) %>% 
+	  arrange(growth_stage)
 	
+	print(gs_ranges)
 	                                                               
 	
 	visibility <- c(gdd_cumsum.forecast = T, gdd_cumsum.historical = F, gdd_cumsum.present = T)
@@ -151,7 +157,7 @@ graph_gdd_plotly <- function(weather_data, lat, long, nuptake_mod, con) {
 
 	tick_font = list(size = 14)
 	title_font = list(size = 14)
-
+	
 	fig <- fig %>% plotly::layout(title = plot_title,
 	                              font = list(size = 11),
 	                              shapes = list(hline(gs_ranges$min[2]),

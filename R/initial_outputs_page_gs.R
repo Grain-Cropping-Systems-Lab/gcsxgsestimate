@@ -77,16 +77,17 @@ initial_outputs_gs_server <- function(id,
 				if(nrow(req(prelim_weather_data())) > 0){
 
 				if(req(map_outputs()$nuptakemod) == FALSE){
+				  
 				  shinyWidgets::updateNoUiSliderInput(session = parent, inputId = ns("growth_stage_user_input"), value = reverseValue(growth_stage_option()))
 				} else {
+
+				  present_prism_gdd <- isolate(weather_data())[isolate(weather_data())$time == "present" & isolate(weather_data())$quality == "prism" & isolate(weather_data())$measurement == "gdd_cumsum", ]
 				  
-				  present_prism_gdd <- weather_data()[weather_data()$time == "present" & weather_data()$quality == "prism" & weather_data()$measurement == "gdd_cumsum", ]
+
+				  val <- gdd_to_feekes((present_prism_gdd[present_prism_gdd$amount == max(present_prism_gdd$amount), ]$amount)*(present_prism_gdd[present_prism_gdd$amount == max(present_prism_gdd$amount), ]$correction))
 				  
-				  val <- gdd_to_feekes((present_prism_gdd[present_prism_gdd$amount == max(present_prism_gdd$amount), ]$amount))
 				  
-#					val <- round(gdd_to_feekes(max(isolate(prelim_weather_data())[isolate(prelim_weather_data())$quality != #"forecast" & isolate(prelim_weather_data())$time == "present" & isolate(prelim_weather_data())$measurement == #"gdd_cumsum", "amount"], na.rm = TRUE)), 1)
-					
-					shinyWidgets::updateNoUiSliderInput(parent, inputId = ns("growth_stage_user_input"), value = reverseValue(val))
+				shinyWidgets::updateNoUiSliderInput(parent, inputId = ns("growth_stage_user_input"), value = reverseValue(val))
 				}
 
 				}
@@ -143,8 +144,13 @@ initial_outputs_gs_server <- function(id,
 						
 						mx_historical <- prelim_weather_data()[prelim_weather_data()$time == "historical" & prelim_weather_data()$quality == "historical" & prelim_weather_data()$measurement == "gdd_cumsum" & prelim_weather_data()$date == mx_date,]$amount
 
-
-						if(round(gdd_to_feekes(max(isolate(prelim_weather_data())[isolate(prelim_weather_data())$quality != "forecast" & isolate(prelim_weather_data())$time == "present" & isolate(prelim_weather_data())$measurement == "gdd_cumsum", "amount"], na.rm = TRUE)), 1) == input$growth_stage_user_input){
+            # testing IF user changes data
+						print("157 TESTING")
+						print(round(gdd_to_feekes(max(isolate(prelim_weather_data())[isolate(prelim_weather_data())$quality != "forecast" & isolate(prelim_weather_data())$time == "present" & isolate(prelim_weather_data())$measurement == "gdd_cumsum", "amount"], na.rm = TRUE)), 1))
+						print(input$growth_stage_user_input)
+						print(reverseValue(input$growth_stage_user_input))
+						
+						if(round(gdd_to_feekes(max(isolate(prelim_weather_data())[isolate(prelim_weather_data())$quality != "forecast" & isolate(prelim_weather_data())$time == "present" & isolate(prelim_weather_data())$measurement == "gdd_cumsum", "amount"], na.rm = TRUE)), 1) == round(input$growth_stage_user_input, 1)){
 							
 							adjustment_factor <- 1
 							
@@ -156,6 +162,9 @@ initial_outputs_gs_server <- function(id,
 							
 							wd <- prelim_weather_data() %>% 
 								bind_rows(feekes)
+							
+							print("166 PRINTING NEW WEATHER DATA FROM WD")
+							print(head(wd))
 						
 							
 						} else {
@@ -166,6 +175,10 @@ initial_outputs_gs_server <- function(id,
 							
 							wd <- prelim_weather_data() %>% 
 								filter(!(quality == "forecast"))
+							
+							#af <<- adjustment_factor
+							#afh <<- adjustment_factor_historical
+							#wd_test <<- wd
 							
 #							if(gdd_to_nuptake(mx) < 100){
 								
@@ -190,36 +203,9 @@ initial_outputs_gs_server <- function(id,
 									tidyr::gather(key = "measurement", value = "amount", -date, -month, -day, -time, -quality) %>%
 									tidyr::drop_na(amount)
 								
-#							} else {
-#								
-#								wd <- wd %>%
-#									filter(measurement == "nuptake_perc",
-#												 time == "present",
-#												 amount <= gdd_to_nuptake(feekes_to_gdd(input$growth_stage_user_input))) %>%
-#									tidyr::spread(key = measurement, value = amount) 
-#								
-#								#mx_date_nup <- max(wd$date, na.rm = TRUE)
-#								#days_adjust <- as.numeric(mx_date - min_date())/as.numeric(mx_date_nup - min_date())
-#								
-#								wd_temp <- wd %>%
-#									mutate(num_days = date - min_date(),
-#												 new_days = num_days*days_adjust,
-#												 date = min_date() + new_days)
-#								
-#								
-#								wd_temp$feekes <- apply(as.data.frame(wd_temp$gdd_cumsum*adjustment_factor), 1, gdd_to_feekes)
-#								
-#								print("isolate bug")
-#								
-#								wd <- wd_temp_present %>%
-#									bind_rows(wd_temp_historical) %>% 
-#									gather(key = "measurement", value = "amount", -date, -month, -day, -time, -quality) %>%
-#									bind_rows(prelim_weather_data() %>%
-#															filter(!(measurement == "nuptake_perc" &
-#																			 	time == "present"))) %>%
-#									drop_na(amount)
-#								
-#							}
+								
+								print("203 PRINTING NEW WEATHER DATA FROM WD")
+								print(head(wd))
 						}
 
 					} else {
@@ -259,7 +245,9 @@ initial_outputs_gs_server <- function(id,
 						bind_rows(feekes) %>% 
 						tidyr::drop_na(amount)
 				}
-
+        
+			  print('FINAL WD')
+			  print(head(wd))
 				return(wd)
 			}) # end weather_data reactive block
 			
@@ -502,7 +490,9 @@ initial_outputs_gs_server <- function(id,
 			   feekes_current <- reverseValue(growth_stage_option())
 			  } else {
 			    
-			    feekes_current <- gdd_to_feekes((present_prism_gdd[present_prism_gdd$amount == max(present_prism_gdd$amount), ]$amount))
+			    print("writing growth stage name, with true N uptake model")
+			    print(head(present_prism_gdd))
+			    feekes_current <- gdd_to_feekes((present_prism_gdd[present_prism_gdd$amount == max(present_prism_gdd$amount), ]$amount)*(present_prism_gdd[present_prism_gdd$amount == max(present_prism_gdd$amount), ]$correction))
 			    
 			  }
 				
@@ -566,13 +556,11 @@ initial_outputs_gs_server <- function(id,
 	})
 	
 	observeEvent(input$back_to_location, {
-	  print("going back")
 		updateTabItems(parent, "tabs", "location")
 	})
 
 			return(list(growth_stage = reactive({input$growth_stage_user_input}),
 									weather_data = weather_data,
-									#nuptake_output = nuptake_output,
 									min_date = min_date, max_date = max_date,
 									water_output = water_output))
 
